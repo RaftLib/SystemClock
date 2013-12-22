@@ -6,14 +6,35 @@
 #ifndef _CLOCK_HPP_
 #define _CLOCK_HPP_  1
 
+typedef long double theclock_t;
+
 class ClockBase{
 public:
-   ClockBase()          = default;
-   virtual ~ClockBase() = default;
-   
+   ClockBase();
+   virtual ~ClockBase();
+  
+   /**
+    * start - starts the timer 
+    */
+   void  start();
    
 protected:
-   volatile clock_t *clock;
+   /** FUNCTIONS **/
+   virtual void checkRequests()     = 0;
+   virtual void serviceRequests()   = 0;
+   
+   /**
+    * updateTime - called to update the time based one 
+    * whatever virtual function implements this.
+    */
+   virtual void updateTime();
+
+   /** VARIABLES **/
+   volatile uint64_t timer;
+   const theclock_t  res;
+private:
+   
+   std::thread *clock_updater;
 };
 
 #endif /* END _CLOCK_HPP_ */
