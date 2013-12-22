@@ -8,14 +8,10 @@
 
 class ClockBase{
 public:
-   ClockBase() = default;
+   ClockBase()          = default;
    virtual ~ClockBase() = default;
    
-   virtual  void    init()  = 0;
-   virtual  void    reset() = 0;
-
-   virtual  clock_t getTime();
-   virtual  clock_t getResolution();
+   
 protected:
    volatile clock_t *clock;
 };
