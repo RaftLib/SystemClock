@@ -27,7 +27,7 @@ protected:
     * updateTime - called to update the time based one 
     * whatever virtual function implements this.
     */
-   virtual void updateTime();
+   virtual void updateTime()        = 0;
 
    /** VARIABLES **/
    volatile uint64_t timer;

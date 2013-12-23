@@ -4,7 +4,9 @@
  * @version: Wed Dec 18 14:07:59 2013
  */
 #include "Clock.hpp"
-#include <time.h>
+#include <cassert>
+#include <cstdlib>
+#include <iostream>
 #include <features.h>
 
 ClockBase::ClockBase() : clock_updater( nullptr ),
@@ -48,16 +50,11 @@ void
 ClockBase::start()
 {
    /** start clock thread **/
+   assert( clock_updater != nullptr );
+   clock_updater->start();
    while( true )
    {
       checkRequests();
       serviceRequests();
    }
-}
-
-
-void
-ClockBase::updateTime()
-{
-   
 }
