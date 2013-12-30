@@ -6,7 +6,7 @@
 #ifndef _CLOCK_HPP_
 #define _CLOCK_HPP_  1
 
-typedef long double theclock_t;
+#include "ClockQueue.hpp"
 
 class ClockBase{
 public:
@@ -53,6 +53,10 @@ public:
     */
    virtual ~ClockBase();
   
+   /**
+    * initialize - Should be called before anything else, 
+    */
+   virtual void initialize();
    
 protected:
    /** FUNCTIONS **/
@@ -71,20 +75,17 @@ protected:
     * whatever virtual function implements this.
     */
    virtual void updateTime()        = 0;
-   /**
-    * initialize - called before anything else, but after
-    * the start, this should be used to initialize any
-    * sub-class data structures that may be necessary
-    * to keep track of time.  Base class version does 
-    * nothing.
-    */
-   virtual void initialize(); 
 
    /** VARIABLES **/
-   volatile uint64_t timer;
-   const theclock_t  res;
+   /* clock counter - pretty sure we'll never need to wrap */
+   volatile std::atomic<uint64_t>         clock;
+   /* current resolution of counter, actual time is clock * resolution */
+   const struct timespec                  res;
+   /* all current queues, one queue for each requesting function */
+   volatile     SystemClock::ClockQueue  *queues;
+
 private:
-   void        selfInitialize( int core );   
+   const int    core;
    std::thread *clock_updater;
    std::thread *servicer;
 };

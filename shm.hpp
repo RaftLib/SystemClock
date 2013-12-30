@@ -10,6 +10,8 @@
 
 class SHM{
 public:
+   SHM()          = delete;
+   virtual ~SHM() = delete;
    /**
     * GenKey - generate a shared key at the memory 
     * address pointed to by ptr *key with length 
@@ -59,10 +61,6 @@ public:
                          size_t nitems,
                          bool   zero = false ,
                          bool   unlink = false );
-
-private:
-   SHM();
-   ~SHM();
 };
 
 #endif /* END _SHM_HPP_ */
