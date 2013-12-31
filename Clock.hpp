@@ -5,7 +5,9 @@
  */
 #ifndef _CLOCK_HPP_
 #define _CLOCK_HPP_  1
-
+#include <cstdlib>
+#include <atomic>
+#include <thread>
 #include "ClockQueue.hpp"
 
 class ClockBase{
@@ -53,14 +55,7 @@ public:
     */
    virtual ~ClockBase();
   
-   /**
-    * initialize - Should be called before anything else, 
-    */
-   virtual void initialize();
-   
-protected:
-   /** FUNCTIONS **/
-   
+
    /**
     * start - starts the timer thread and the update
     * thread.  One thread serves the requests and 
@@ -68,26 +63,33 @@ protected:
     */
    void  start();
    
-   virtual void checkRequests()     = 0;
-   virtual void serviceRequests()   = 0;
-   /**
-    * updateTime - called to update the time based one 
-    * whatever virtual function implements this.
-    */
-   virtual void updateTime()        = 0;
+	void incrementClock();
 
-   /** VARIABLES **/
-   /* clock counter - pretty sure we'll never need to wrap */
-   volatile std::atomic<uint64_t>         clock;
    /* current resolution of counter, actual time is clock * resolution */
    const struct timespec                  res;
+
+protected:
+   /** FUNCTIONS **/
+   
+   /**
+    * initialize - Should be called before anything else, 
+    */
+   virtual void initialize();
+   
+   
+   virtual void checkRequests()     = 0;
+	
+	/* clock counter - pretty sure we'll never need to wrap */
+   volatile std::atomic<uint64_t>         clock;
+
+   /** VARIABLES **/
    /* all current queues, one queue for each requesting function */
    volatile     SystemClock::ClockQueue  *queues;
-
-private:
    const int    core;
+
+	std::function<void( ClockBase& )> updateTime;
+private:
    std::thread *clock_updater;
-   std::thread *servicer;
 };
 
 #endif /* END _CLOCK_HPP_ */

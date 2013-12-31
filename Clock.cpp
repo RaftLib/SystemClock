@@ -7,44 +7,50 @@
 #include <cassert>
 #include <cstdlib>
 #include <iostream>
+#include <functional>
 #include <features.h>
-
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE 1
+#endif
 #include <sched.h>
 #include <unistd.h>
 
-ClockBase::ClockBase() : clock_updater( nullptr ),
-                         servicer( nullptr ),
-                         clock( 0 ),
+ClockBase::ClockBase() : 
                          res( {0    /* seconds */,
-                               1000 /* nanoseconds */ } )
+                               1000 /* nanoseconds */ } ),
+                         clock( 0 ),
+								 core( 0 ),
+								 updateTime( nullptr ),
+								 clock_updater( nullptr )
 {
 }
 
 ClockBase::ClockBase( time_t seconds,
-                      long   nanoseconds ) : clock_updater( nullptr ),
-                                             servicer( nullptr ),
-                                             clock( 0 ),
+                      long   nanoseconds ) : 
                                              res( { seconds,
-                                                    nanoseconds } )
+                                                    nanoseconds } ),
+                                             clock( 0 ),
+															core( 0 ),
+								 							updateTime( nullptr ),
+							 								clock_updater( nullptr )
 {
 }
 
 ClockBase::ClockBase( time_t seconds,
                       long   nanoseconds,
-                      int    core        ) : clock_updater( nullptr ),
-                                             servicer( nullptr ),
-                                             clock( 0 ),
+                      int    core        ) : 
                                              res( { seconds,
-                                                    nanoseconds } )
+                                                    nanoseconds } ),
+                                             clock( 0 ),
+															core( core ),
+								 							updateTime( nullptr ),
+							 								clock_updater( nullptr )
 {
 }
 
 ClockBase::~ClockBase()
 {
    delete( clock_updater );
-   delete( servicer      );
 }
 /**
  * start - starts the timer
@@ -52,11 +58,12 @@ ClockBase::~ClockBase()
 void
 ClockBase::start()
 {
+   initialize();
    /** derived class must allocate the queues somewhere before here **/
    assert( queues != nullptr );
    try
    {
-      clock_updater = new std::thread( updateTime );
+      clock_updater = new std::thread( updateTime, std::ref( *this ) );
    }
    catch( std::bad_alloc )
    {
@@ -64,24 +71,19 @@ ClockBase::start()
       exit( EXIT_FAILURE );
    }
    
-   try
-   {
-      servicer = new std::thread( start() );
-   }
-   catch( std::bad_alloc )
-   {
-      std::cerr << "Failed to allocate servicer thread, exiting!!\n";
-      exit( EXIT_FAILURE );
-   }
-   
-   while( true )
+	while( true )
    {
       checkRequests();
-      serviceRequests();
    }
 }
 
 void
 ClockBase::initialize()
 {
+}
+
+void
+ClockBase::incrementClock()
+{
+	this->clock++;
 }
