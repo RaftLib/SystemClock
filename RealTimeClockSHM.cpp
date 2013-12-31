@@ -64,7 +64,7 @@ RealTimeClockSHM::~RealTimeClockSHM()
 }
 
 void 
-RealTimeClockSHM::checkRequests()
+RealTimeClockSHM::checkRequests( ClockBase &base )
 {
    for( int i( 0 ); i < requestors; i++ )
    {
