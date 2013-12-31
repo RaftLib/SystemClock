@@ -19,6 +19,7 @@ ClockBase::ClockBase() :
                          res( {0    /* seconds */,
                                1000 /* nanoseconds */ } ),
                          clock( 0 ),
+                         queues( nullptr ),
 								 core( 0 ),
 								 updateTime( nullptr ),
 								 clock_updater( nullptr )
@@ -30,6 +31,7 @@ ClockBase::ClockBase( time_t seconds,
                                              res( { seconds,
                                                     nanoseconds } ),
                                              clock( 0 ),
+                                             queues( nullptr ),
 															core( 0 ),
 								 							updateTime( nullptr ),
 							 								clock_updater( nullptr )
@@ -42,6 +44,7 @@ ClockBase::ClockBase( time_t seconds,
                                              res( { seconds,
                                                     nanoseconds } ),
                                              clock( 0 ),
+                                             queues( nullptr ),
 															core( core ),
 								 							updateTime( nullptr ),
 							 								clock_updater( nullptr )

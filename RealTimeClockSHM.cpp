@@ -108,7 +108,6 @@ RealTimeClockSHM::updateTimeFunction( ClockBase &base )
             perror( "Failed to sleep for the designated amount of time!!" );
          }
       }
-
       /** increment clock atomically **/
    	base.incrementClock();
 	}
@@ -150,7 +149,7 @@ RealTimeClockSHM::initialize()
    /** allocate shared memory **/
    assert( queues == nullptr );
    queues = (SystemClock::ClockQueue*) SHM::Init( 
-         reinterpret_cast< const char*>(key_buffer[0]) /* key       */,
+         &key_buffer[0],
          sizeof( SystemClock::ClockQueue )                   /* item size */,
          requestors                             /* nitems    */,
          true                                   /* zero      */);
