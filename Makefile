@@ -1,5 +1,5 @@
-CXXFLAGS = -std=c++11 -O3 -Wall
-CFLAGS   = -std=c99 -O3 -Wall
+CXXFLAGS = -std=c++11 -O0 -g -Wall
+CFLAGS   = -std=c99 -O0 -g -Wall
 
 CXXFILES = Clock RealTimeClockSHM shm main
 CFILES   = getrandom

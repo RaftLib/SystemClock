@@ -76,7 +76,7 @@ protected:
     */
    virtual void initialize();
    
-   
+   /** TODO checkRequests must be on its on thread of execution!! **/ 
    virtual void checkRequests()     = 0;
 	
 	/* clock counter - pretty sure we'll never need to wrap */

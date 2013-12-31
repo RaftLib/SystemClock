@@ -13,10 +13,12 @@ main( int argc, char **argv )
                     1 /* num requesters */,
                     "theclockkey",
                     11 );
+   std::cerr << "Attempting to start\n";
    clock.start();
-
+   std::cerr << "Attempting to initialize instance!!\n";
    SystemClock::ClockQueue *instance( 
                RealTimeClockSHM::getClockQueueInstance("theclockkey") );
+   std::cerr << "Instance Initialized\n";
    assert( instance != nullptr );
    const double timeToStop( 1.123 + 
       SystemClock::ClockQueue::getTime( instance[0]  ) );
