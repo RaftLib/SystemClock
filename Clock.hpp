@@ -75,9 +75,6 @@ protected:
     * initialize - Should be called before anything else, 
     */
    virtual void initialize();
-   
-   /** TODO checkRequests must be on its on thread of execution!! **/ 
-   virtual void checkRequests()     = 0;
 	
 	/* clock counter - pretty sure we'll never need to wrap */
    volatile std::atomic<uint64_t>         clock;
@@ -87,9 +84,22 @@ protected:
    volatile     SystemClock::ClockQueue  *queues;
    const int    core;
 
+   /** NOTE: Sub-classes must implement and set these functions
+    *  in their constructors.  The functions must do the following:
+    *  updateTime - define some method of incrementing the clock
+    *  variable with whatever means necessary to maintain the resolution
+    *  stored in struct timespec res.
+    *
+    *  checkRequestsFunction - implement some way of checking each 
+    *  ClockQueue object allocated in the variable queues and responding
+    *  to each request with the current time multiple of (clock * res )
+    */
 	std::function<void( ClockBase& )> updateTime;
+   std::function<void( ClockBase& )> checkRequestsFunction;
+
 private:
    std::thread *clock_updater;
+   std::thread *requestor_thread;
 };
 
 #endif /* END _CLOCK_HPP_ */

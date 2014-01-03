@@ -40,10 +40,10 @@ public:
                                         SystemClock::ClockQueue *ptr,
                                         size_t                   num_timers );
 
-   /** function gets passed to base class **/                                        
+   /** function gets passed to base class **/                                
    static void updateTimeFunction( ClockBase &base );
+   static void theCheckRequestsFunction( ClockBase &base );
 protected:
-   virtual void checkRequests();
    virtual void initialize();
 
 private:

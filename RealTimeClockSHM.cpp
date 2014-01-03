@@ -20,6 +20,7 @@ RealTimeClockSHM::RealTimeClockSHM( int num_requestors,
                  key,
                  key_length );
 	updateTime = updateTimeFunction;
+   checkRequestsFunction = theCheckRequestsFunction; 
 }
 
 RealTimeClockSHM::RealTimeClockSHM( time_t seconds,
@@ -35,6 +36,7 @@ RealTimeClockSHM::RealTimeClockSHM( time_t seconds,
                  key,
                  key_length );
 	updateTime = updateTimeFunction;
+   checkRequestsFunction = theCheckRequestsFunction; 
 }
 
 RealTimeClockSHM::RealTimeClockSHM( time_t seconds,
@@ -51,6 +53,7 @@ RealTimeClockSHM::RealTimeClockSHM( time_t seconds,
                  key,
                  key_length );
 	updateTime = updateTimeFunction;
+   checkRequestsFunction = theCheckRequestsFunction; 
 }
 
 RealTimeClockSHM::~RealTimeClockSHM()
@@ -63,22 +66,6 @@ RealTimeClockSHM::~RealTimeClockSHM()
           true );
 }
 
-void 
-RealTimeClockSHM::checkRequests( ClockBase &base )
-{
-   for( int i( 0 ); i < requestors; i++ )
-   {
-      if( SystemClock::ClockQueue::isRequestWaiting( queues[i] ) )
-      {
-         SystemClock::ClockQueue::acknowledgeRequest( queues[i] );
-         const double   nanoseconds( res.tv_nsec * clock );
-         const time_t   seconds(     res.tv_sec  * clock );
-         const double   nano_convert( nanoseconds * 1.0e-9 );
-         const double   curr_time( nano_convert + seconds );
-         SystemClock::ClockQueue::sendTime( queues[i], curr_time );
-      }
-   }
-}
 
 void 
 RealTimeClockSHM::updateTimeFunction( ClockBase &base )
@@ -112,6 +99,27 @@ RealTimeClockSHM::updateTimeFunction( ClockBase &base )
    	base.incrementClock();
 	}
 }                
+
+void 
+RealTimeClockSHM::theCheckRequestsFunction( ClockBase &base )
+{
+   RealTimeClockSHM &base_rtc_shm( reinterpret_cast<
+                                    RealTimeClockSHM&>( base ) );
+   while( true ){                                    
+      for( int i( 0 ); i < base_rtc_shm.getRequestors() ; i++ )
+      {
+         if( SystemClock::ClockQueue::isRequestWaiting( base_rtc_shm.queues[i] ) )
+         {
+            SystemClock::ClockQueue::acknowledgeRequest( base_rtc_shm.queues[i] );
+            const double   nanoseconds( base_rtc_shm.res.tv_nsec * clock );
+            const time_t   seconds(     base_rtc_shm.res.tv_sec  * clock );
+            const double   nano_convert( nanoseconds * 1.0e-9 );
+            const double   curr_time( nano_convert + seconds );
+            SystemClock::ClockQueue::sendTime( base_rtc_shm.queues[i], curr_time );
+         }
+      }
+   }
+}
 
 void 
 RealTimeClockSHM::initialize()

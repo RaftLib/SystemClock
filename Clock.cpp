@@ -22,7 +22,9 @@ ClockBase::ClockBase() :
                          queues( nullptr ),
 								 core( 0 ),
 								 updateTime( nullptr ),
-								 clock_updater( nullptr )
+                         checkRequestsFunction( nullptr ),
+								 clock_updater( nullptr ),
+                         requestor_thread( nullptr )
 {
 }
 
@@ -34,7 +36,9 @@ ClockBase::ClockBase( time_t seconds,
                                              queues( nullptr ),
 															core( 0 ),
 								 							updateTime( nullptr ),
-							 								clock_updater( nullptr )
+                                             checkRequestsFunction( nullptr ),
+							 								clock_updater( nullptr ),
+                                             requestor_thread( nullptr )
 {
 }
 
@@ -47,7 +51,9 @@ ClockBase::ClockBase( time_t seconds,
                                              queues( nullptr ),
 															core( core ),
 								 							updateTime( nullptr ),
-							 								clock_updater( nullptr )
+                                             checkRequestsFunction( nullptr ),
+							 								clock_updater( nullptr ),
+                                             requestor_thread( nullptr )
 {
 }
 
@@ -74,9 +80,15 @@ ClockBase::start()
       exit( EXIT_FAILURE );
    }
    
-	while( true )
+   try
    {
-      checkRequests();
+      requestor_thread = new std::thread( theCheckRequestsFunction,
+                                                   std::ref( (*this) ) ); 
+   }
+   catch( std::bad_alloc )
+   {
+      std::cerr << "Failed to allocate requestor thread, exiting!!\n";
+      exit( EXIT_FAILURE );
    }
 }
 
