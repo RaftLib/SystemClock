@@ -65,9 +65,11 @@ public:
    
 	void incrementClock();
 
-   /* current resolution of counter, actual time is clock * resolution */
-   const struct timespec                  res;
+   const double getRealTime();
 
+   /* current resolution of counter, actual time is clock * resolution */
+//   const struct timespec                  res;
+   const int64_t                            res;
    bool  selfdestruct;
 protected:
    /** FUNCTIONS **/
@@ -78,14 +80,11 @@ protected:
    virtual void initialize();
 	
 	/* clock counter - pretty sure we'll never need to wrap */
-   volatile std::atomic<uint64_t>         clock;
-
+   std::atomic<uint64_t>         clock;
    /** VARIABLES **/
    /* all current queues, one queue for each requesting function */
-   volatile     SystemClock::ClockQueue  *queues;
+   volatile SystemClock::ClockQueue  *queues;
    const int    core;
-
-   const uint64_t getClock();
 
    /** NOTE: Sub-classes must implement and set these functions
     *  in their constructors.  The functions must do the following:

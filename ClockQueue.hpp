@@ -17,36 +17,36 @@ struct ClockQueue
       /** nothing to do here **/
    }
 
-   static void requestTime( volatile ClockQueue &queue )
+   static void requestTime(  volatile ClockQueue &queue )
    {
      queue.request = queue.signal_high;
    }
 
-   static void acknowledgeRequest( volatile ClockQueue &queue )
+   static void acknowledgeRequest(  volatile ClockQueue &queue )
    {
       queue.request = queue.signal_low;
    }
 
-   static void sendTime( volatile ClockQueue &queue, const double curr_time )
+   static void sendTime(  volatile ClockQueue &queue, const double curr_time )
    {
       queue.time = curr_time;
       queue.send = queue.signal_high;
    }
 
-   static void acknowledgeSend( volatile ClockQueue &queue )
+   static void acknowledgeSend(  volatile ClockQueue &queue )
    {
       queue.send = queue.signal_low;
    }
 
-   static bool isRequestWaiting( volatile ClockQueue &queue )
+   static bool isRequestWaiting(  volatile ClockQueue &queue )
    {
       return( queue.request == queue.signal_high );
    }
 
-   static double getTime( volatile ClockQueue &queue )
+   static double getTime(  volatile ClockQueue &queue )
    {
       requestTime( queue );
-      double output;
+      volatile double output( 0.0 );
       while( queue.send ^ queue.signal_high /* spin till data avail */ )
       {
          output = queue.time;

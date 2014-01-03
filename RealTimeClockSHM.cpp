@@ -7,10 +7,13 @@
 #include <errno.h>
 #include <time.h>
 #include <cstring>
+#include <chrono>
+#include <thread>
 #include <cassert>
+#include <cstdint>
 #include "RealTimeClockSHM.hpp"
 #include "shm.hpp"
-
+#include "system_query.h"
 RealTimeClockSHM::RealTimeClockSHM( int num_requestors,
                                  const char* key,
                                  size_t key_length  ) : ClockBase(),
@@ -74,6 +77,15 @@ RealTimeClockSHM::updateTimeFunction( ClockBase &base )
    const int success( 0 );
    while( ! base.selfdestruct )
    {
+      
+      const auto frequency( getStatedCPUFrequency() );
+      const uint64_t tickToStopOn( 
+         (uint64_t)(frequency * ((double) base.res * 1.0e-9) ) + 
+                  readTimeStampCounter() );
+      while( tickToStopOn > readTimeStampCounter() );
+//      std::chrono::nanoseconds  nap_time( base.res );
+//      std::this_thread::sleep_for( nap_time );
+#if( 0 )   
       errno = success;
       struct timespec remainder( {0,0} );
       const int ret_val( clock_nanosleep( CLOCK_REALTIME      /* clock ID */ ,
@@ -95,6 +107,7 @@ RealTimeClockSHM::updateTimeFunction( ClockBase &base )
             perror( "Failed to sleep for the designated amount of time!!" );
          }
       }
+#endif      
       /** increment clock atomically **/
    	base.incrementClock();
 	}
@@ -110,13 +123,11 @@ RealTimeClockSHM::theCheckRequestsFunction( ClockBase &base )
       {
          if( SystemClock::ClockQueue::isRequestWaiting( base_rtc_shm.queues[i] ) )
          {
-            const auto clock_val( base_rtc_shm.getClock() );
-            SystemClock::ClockQueue::acknowledgeRequest( base_rtc_shm.queues[i] );
-            const double   nanoseconds( base_rtc_shm.res.tv_nsec * clock_val );
-            const time_t   seconds(     base_rtc_shm.res.tv_sec  * clock_val );
-            const double   nano_convert( nanoseconds * 1.0e-9 );
-            const double   curr_time( nano_convert + seconds );
-            SystemClock::ClockQueue::sendTime( base_rtc_shm.queues[i], curr_time );
+            const double val( base_rtc_shm.getRealTime() );
+            SystemClock::ClockQueue::sendTime( base_rtc_shm.queues[i], 
+                                               val );
+            SystemClock::ClockQueue::acknowledgeRequest( 
+                                    base_rtc_shm.queues[i] );
          }
       }
    }
@@ -126,35 +137,36 @@ void
 RealTimeClockSHM::initialize()
 {
 	const int success( 0 );
-   /* pin processor */
-   /* the cpuset should be inherited by forked processes */
-   cpu_set_t   *cpuset( nullptr );
-   const int8_t processors_to_allocate( 1 );
-   size_t cpu_allocate_size( -1 );
+   if( core >= 0 ){
+      /* pin processor */
+      /* the cpuset should be inherited by forked processes */
+      cpu_set_t   *cpuset( nullptr );
+      const int8_t processors_to_allocate( 1 );
+      size_t cpu_allocate_size( -1 );
 #if   (__GLIBC_MINOR__ > 9 ) && (__GLIBC__ == 2 )
-   cpuset = CPU_ALLOC( processors_to_allocate );
-   assert( cpuset != nullptr );
-   cpu_allocate_size =  CPU_ALLOC_SIZE( processors_to_allocate );
-   CPU_ZERO_S( cpu_allocate_size, cpuset );
+      cpuset = CPU_ALLOC( processors_to_allocate );
+      assert( cpuset != nullptr );
+      cpu_allocate_size =  CPU_ALLOC_SIZE( processors_to_allocate );
+      CPU_ZERO_S( cpu_allocate_size, cpuset );
 #else
-   cpu_allocate_size = sizeof( cpu_set_t );
-   cpuset = (cpu_set_t*) malloc( cpu_allocate_size );
-   assert( cpuset != nullptr );
-   CPU_ZERO( cpuset );
+      cpu_allocate_size = sizeof( cpu_set_t );
+      cpuset = (cpu_set_t*) malloc( cpu_allocate_size );
+      assert( cpuset != nullptr );
+      CPU_ZERO( cpuset );
 #endif
-   CPU_SET( core,
-            cpuset );
-   auto setaffinity_ret_val( success );
-   errno = success;
-   setaffinity_ret_val = sched_setaffinity( 0 /* self */,
-                                            cpu_allocate_size,
-                                            cpuset );
-   if( setaffinity_ret_val != success )
-   {
-      perror( "Failed to set processor affinity" );
-      exit( EXIT_FAILURE );
+      CPU_SET( core,
+               cpuset );
+      auto setaffinity_ret_val( success );
+      errno = success;
+      setaffinity_ret_val = sched_setaffinity( 0 /* self */,
+                                               cpu_allocate_size,
+                                               cpuset );
+      if( setaffinity_ret_val != success )
+      {
+         perror( "Failed to set processor affinity" );
+         exit( EXIT_FAILURE );
+      }
    }
-
    /** allocate shared memory **/
    assert( queues == nullptr );
    queues = (SystemClock::ClockQueue*) SHM::Init( 
@@ -162,7 +174,15 @@ RealTimeClockSHM::initialize()
          sizeof( SystemClock::ClockQueue )                   /* item size */,
          requestors                             /* nitems    */,
          true                                   /* zero      */);
-   assert( queues != nullptr );      
+   assert( queues != nullptr );
+   /* ``allocate'' the ClockQueue objects onto the mem */
+   SystemClock::ClockQueue templateQueue;
+   for( int i( 0 ); i < requestors; i++ )
+   {
+      std::memcpy( ((void*)&queues[i]), 
+                   &templateQueue, 
+                   sizeof( SystemClock::ClockQueue ) );
+   }
 }
 
 SystemClock::ClockQueue*

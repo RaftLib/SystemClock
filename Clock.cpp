@@ -16,8 +16,7 @@
 #include <unistd.h>
 
 ClockBase::ClockBase() : 
-                         res( {0    /* seconds */,
-                               1000 /* nanoseconds */ } ),
+                         res( 1000 ),
                          selfdestruct( false ),
                          clock( 0 ),
                          queues( nullptr ),
@@ -31,8 +30,7 @@ ClockBase::ClockBase() :
 
 ClockBase::ClockBase( time_t seconds,
                       long   nanoseconds ) : 
-                                             res( { seconds,
-                                                    nanoseconds } ),
+                                             res( nanoseconds ),
                                              selfdestruct( false ),
                                              clock( 0 ),
                                              queues( nullptr ),
@@ -47,8 +45,7 @@ ClockBase::ClockBase( time_t seconds,
 ClockBase::ClockBase( time_t seconds,
                       long   nanoseconds,
                       int    core        ) : 
-                                             res( { seconds,
-                                                    nanoseconds } ),
+                                             res( nanoseconds ),
                                              selfdestruct( false ),
                                              clock( 0 ),
                                              queues( nullptr ),
@@ -106,13 +103,6 @@ ClockBase::incrementClock()
 	this->clock++;
 }
 
-const uint64_t 
-ClockBase::getClock()
-{
-   const uint64_t val( clock.load( std::memory_order_relaxed ) );
-   return( val );
-}
-
 void
 ClockBase::callSelfDestruct()
 {
@@ -123,4 +113,11 @@ ClockBase::callSelfDestruct()
    requestor_thread->join();
    delete( requestor_thread );
    requestor_thread = nullptr;
+}
+
+const double
+ClockBase::getRealTime()
+{
+   const auto val( clock.load( std::memory_order_relaxed ) );
+   return( val * res * 1.0e-9);
 }
