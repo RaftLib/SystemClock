@@ -68,9 +68,10 @@ public:
    /* current resolution of counter, actual time is clock * resolution */
    const struct timespec                  res;
 
+   bool  selfdestruct;
 protected:
    /** FUNCTIONS **/
-   
+   virtual void callSelfDestruct();   
    /**
     * initialize - Should be called before anything else, 
     */
@@ -83,6 +84,8 @@ protected:
    /* all current queues, one queue for each requesting function */
    volatile     SystemClock::ClockQueue  *queues;
    const int    core;
+
+   const uint64_t getClock();
 
    /** NOTE: Sub-classes must implement and set these functions
     *  in their constructors.  The functions must do the following:

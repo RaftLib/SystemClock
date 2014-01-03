@@ -4,6 +4,7 @@
 #include "Clock.hpp"
 #include "ClockQueue.hpp"
 #include "RealTimeClockSHM.hpp"
+#include <unistd.h>
 
 int
 main( int argc, char **argv )
@@ -20,17 +21,15 @@ main( int argc, char **argv )
                RealTimeClockSHM::getClockQueueInstance("theclockkey") );
    std::cerr << "Instance Initialized\n";
    assert( instance != nullptr );
-   const double timeToStop( 1.123 + 
-      SystemClock::ClockQueue::getTime( instance[0]  ) );
-   std::cerr << "Time to stop: " << timeToStop << "\n";
-   volatile double last( 0.0 );
-   while( timeToStop >= 
-         ( last = SystemClock::ClockQueue::getTime( instance[0]  ) ) )
+   std::cerr << "Time before sleep: " << 
+      SystemClock::ClockQueue::getTime( *instance ) << "\n";
+   errno = 0;
+   if( sleep( 2 ) != 0 )
    {
-      /** do nothing **/
-      std::cerr << "CTime: " << last << "\n";
+      perror( "Failed to sleep for 2 seconds!!\n" );
    }
-   std::cerr << "Timer Stopped at time: " << last << "\n";
-   std::cerr << "Target Stop Time: " << timeToStop << "\n";
+   assert( errno == 0 );
+   std::cerr << "Time after sleep: " << 
+      SystemClock::ClockQueue::getTime( *instance ) << "\n"; 
    return( EXIT_SUCCESS );
 }

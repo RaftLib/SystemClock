@@ -40,6 +40,8 @@ public:
                                         SystemClock::ClockQueue *ptr,
                                         size_t                   num_timers );
 
+   const int   getRequestors();
+
    /** function gets passed to base class **/                                
    static void updateTimeFunction( ClockBase &base );
    static void theCheckRequestsFunction( ClockBase &base );

@@ -18,6 +18,7 @@
 ClockBase::ClockBase() : 
                          res( {0    /* seconds */,
                                1000 /* nanoseconds */ } ),
+                         selfdestruct( false ),
                          clock( 0 ),
                          queues( nullptr ),
 								 core( 0 ),
@@ -32,6 +33,7 @@ ClockBase::ClockBase( time_t seconds,
                       long   nanoseconds ) : 
                                              res( { seconds,
                                                     nanoseconds } ),
+                                             selfdestruct( false ),
                                              clock( 0 ),
                                              queues( nullptr ),
 															core( 0 ),
@@ -47,6 +49,7 @@ ClockBase::ClockBase( time_t seconds,
                       int    core        ) : 
                                              res( { seconds,
                                                     nanoseconds } ),
+                                             selfdestruct( false ),
                                              clock( 0 ),
                                              queues( nullptr ),
 															core( core ),
@@ -59,7 +62,7 @@ ClockBase::ClockBase( time_t seconds,
 
 ClockBase::~ClockBase()
 {
-   delete( clock_updater );
+   /** threads cleaned up by calling callSelfDestruct() in derived class **/
 }
 /**
  * start - starts the timer
@@ -82,7 +85,7 @@ ClockBase::start()
    
    try
    {
-      requestor_thread = new std::thread( theCheckRequestsFunction,
+      requestor_thread = new std::thread( checkRequestsFunction,
                                                    std::ref( (*this) ) ); 
    }
    catch( std::bad_alloc )
@@ -101,4 +104,23 @@ void
 ClockBase::incrementClock()
 {
 	this->clock++;
+}
+
+const uint64_t 
+ClockBase::getClock()
+{
+   const uint64_t val( clock.load( std::memory_order_relaxed ) );
+   return( val );
+}
+
+void
+ClockBase::callSelfDestruct()
+{
+   selfdestruct = true;
+   clock_updater->join();
+   delete( clock_updater );
+   clock_updater = nullptr;
+   requestor_thread->join();
+   delete( requestor_thread );
+   requestor_thread = nullptr;
 }
