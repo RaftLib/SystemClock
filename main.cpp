@@ -9,10 +9,16 @@
 #include "system_query.h"
 
 void
-run()
+run( /*std::chrono::microseconds us*/ )
 {
-   std::chrono::seconds  nap_time( 1 );
-   std::this_thread::sleep_for( nap_time );
+   const std::chrono::seconds us( 2 );
+   const auto start = std::chrono::high_resolution_clock::now();
+   const auto end = start + us;
+   do {
+      std::this_thread::yield();
+   } while (std::chrono::high_resolution_clock::now() < end);
+   const std::chrono::microseconds us2 = std::chrono::high_resolution_clock::now();
+   std::cerr << "Time: " << ( std::chrono::high_resolution_clock::now()) << "\n";
 }
 
 
@@ -21,7 +27,7 @@ main( int argc, char **argv )
 {
    RealTimeClockSHM clock( 0 /* seconds */,
                     100 /* nanoseconds */,
-                    1 /* core */,
+                    -1 /* core */,
                     1 /* num requestors */,
                     "theclockkey",
                     11 );

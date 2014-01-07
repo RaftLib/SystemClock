@@ -77,15 +77,20 @@ RealTimeClockSHM::updateTimeFunction( ClockBase &base )
    const int success( 0 );
    while( ! base.selfdestruct )
    {
-      
+#if(0) 
       const auto frequency( getStatedCPUFrequency() );
       const uint64_t tickToStopOn( 
          (uint64_t)(frequency * ((double) base.res * 1.0e-9) ) + 
                   readTimeStampCounter() );
       while( tickToStopOn > readTimeStampCounter() );
-//      std::chrono::nanoseconds  nap_time( base.res );
-//      std::this_thread::sleep_for( nap_time );
-#if( 0 )   
+#elif( 0 )
+   const std::chrono::microseconds us( 5 );
+   const auto start = std::chrono::high_resolution_clock::now();
+   const auto end = start + us;
+   do {
+      std::this_thread::yield();
+   } while (std::chrono::high_resolution_clock::now() < end);
+#elif( 1 )   
       errno = success;
       struct timespec remainder( {0,0} );
       const int ret_val( clock_nanosleep( CLOCK_REALTIME      /* clock ID */ ,

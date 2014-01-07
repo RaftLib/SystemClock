@@ -68,8 +68,8 @@ public:
    const double getRealTime();
 
    /* current resolution of counter, actual time is clock * resolution */
-//   const struct timespec                  res;
-   const int64_t                            res;
+   const struct timespec                  res;
+//   const int64_t                            res;
    bool  selfdestruct;
 protected:
    /** FUNCTIONS **/
