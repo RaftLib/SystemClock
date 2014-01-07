@@ -18,7 +18,7 @@ run( /*std::chrono::microseconds us*/ )
       std::this_thread::yield();
    } while (std::chrono::high_resolution_clock::now() < end);
    const std::chrono::microseconds us2 = std::chrono::high_resolution_clock::now();
-   std::cerr << "Time: " << ( std::chrono::high_resolution_clock::now()) << "\n";
+   
 }
 
 
