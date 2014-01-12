@@ -9,7 +9,13 @@
 #include "ClockBase.hpp"
 class SHMClock : public ClockBase {
 public:
-   void  intialize();
+   SHMClock( const std::string shm_key );
+   /**
+    * initialize - this version only initializes the
+    * shared memory, to get a pinned version extend
+    * this class
+    */
+    virtual  void  intialize();
 protected:
    const std::string SHMKey;
 };

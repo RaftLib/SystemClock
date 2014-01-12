@@ -7,6 +7,12 @@
 
 #include "SHMClock.hpp"
 #include "shm.hpp"
+
+SHMClock::SHMClock( const std::string shm_key ) : SHMKey( shm_key )
+{
+   
+}
+
 void
 SHMClock::initialize()
 {

@@ -9,11 +9,10 @@
 
 class ClockBase { 
 public:
-   void  initialize()= 0;
-   void  start()     = 0;
-   void  shutdown()  = 0;
+   virtual  void  initialize()= 0;
+   virtual  void  start()     = 0;
+   virtual  void  shutdown()  = 0;
 
-   static   double   getTime( volatile Timer *timer );
 protected:
    volatile Timer *timer;
 };
