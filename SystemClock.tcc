@@ -26,7 +26,18 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
+#include <unistd.h>
+
+#ifdef __APPLE__
+#include <CoreServices/CoreServices.h>
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+#endif
+
+#ifdef __linux
 #include <time.h>
+#endif
+
 
 enum SystemType { Linux_x86, Linux_ARM, Darwin };
 enum ClockType  { Dummy, Cycle, System };
@@ -147,7 +158,30 @@ private:
                clock->increment( seconds );
             };
 #elif defined __APPLE__
-
+            uint64_t  current( 0 );
+            uint64_t  previous( 0 );
+            /** init **/
+            previous = mach_absolute_time();
+            static mach_timebase_info_data_t sTimebaseInfo;
+            if( sTimebaseInfo.denom == 0 )
+            {
+               (void) mach_timebase_info( &sTimebaseInfo );
+            }
+            function = [&]( Clock *clock )
+            {
+               current = mach_absolute_time();
+               const uint64_t diff( current - previous );
+               previous = current;
+               /** 
+                * TODO, fix this, there's gotta be a better way
+                * figure out what units the return val is in.
+                */
+                
+                const uint64_t elapsedNano( diff * sTimebaseInfo.numer / sTimebaseInfo.denom );
+                
+                const sclock_t seconds( (sclock_t) elapsedNano * 1.0e-9 );
+                clock->increment( seconds );
+            };
 #endif
          }
          break;
