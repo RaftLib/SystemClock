@@ -24,9 +24,10 @@
 #include <cstdlib>
 
 enum SystemType { Linux_x86, Linux_ARM, Darwin };
+enum ClockType  { 
 typedef long double sclock_t;
 
-template < SystemType type > class SystemClock {
+template < SystemType type, ClockType T > class SystemClock {
 public:
    SystemClock() : clock(   nullptr ),
                    updater( nullptr ),
@@ -58,7 +59,7 @@ public:
 
 
 private:
-   class Clock {
+   template < ClockType T > class Clock {
    public:
       Clock() : a( 0.0 ),
                 b( 0.0 )
@@ -99,7 +100,7 @@ private:
       }
    }
    
-   Clock             *clock;
+   Clock< T >        *clock;
    std::thread       *updater;
    volatile bool     stop;
 
