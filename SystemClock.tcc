@@ -115,7 +115,8 @@ private:
          break;
          case( Cycle ):
          {
-            assert( false );
+            /** lock thread **/   
+            /** get cycle counter **/
          }
          break;
          case( System ):
@@ -146,8 +147,6 @@ private:
                clock->increment( seconds );
             };
 #elif defined __APPLE__
-
-#else
 
 #endif
          }
