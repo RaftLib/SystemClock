@@ -28,7 +28,7 @@
 int 
 main( int argc, char **argv )
 {
-   SystemClock< Linux_x86, Dummy > clock;
+   SystemClock< Linux_x86, System > clock;
    std::chrono::milliseconds dura( 2000 );
    std::this_thread::sleep_for( dura );
    std::cerr << clock.getTime() << "\n";

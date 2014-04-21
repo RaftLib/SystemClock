@@ -5,7 +5,7 @@ CXXFILES = main
 CC = clang
 CXX = clang++
 
-LIBS =-lpthread
+LIBS =-lpthread -lrt
 
 OBJS  = $(addsuffix .o, $(CXXFILES)) $(addsuffix .o, $(CFILES))
 FILES = $(addsuffix .cpp, $(CXXFILES)) $(addsuffix .c, $(CFILES))

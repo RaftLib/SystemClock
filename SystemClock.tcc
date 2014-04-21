@@ -23,6 +23,10 @@
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
+#include <cassert>
+#include <cstdint>
+#include <cstring>
+#include <time.h>
 
 enum SystemType { Linux_x86, Linux_ARM, Darwin };
 enum ClockType  { Dummy, Cycle, System };
@@ -119,22 +123,22 @@ private:
 #ifdef   __linux
             struct timespec curr_time;
             struct timespec prev_time;
-            std::memset( curr_time, 0, sizeof( struct timespec ) ); 
-            std::memset( prev_time, 0, sizeof( struct timespec ) ); 
+            std::memset( &curr_time, 0, sizeof( struct timespec ) ); 
+            std::memset( &prev_time, 0, sizeof( struct timespec ) ); 
             if( clock_gettime( CLOCK_REALTIME, &prev_time ) != 0 )
             {
                perror( "Failed to get initial time." );
             }
-            function = []( Clock *clock )
+            function = [&]( Clock *clock )
             {
                errno = 0;
-               //FIXME
                if( clock_gettime( CLOCK_REALTIME, &curr_time ) != 0 )
                {
                   perror( "Failed to get current time!" );
                }
-               const struct timespec diff( curr_time.tv_sec - prev_time.tv_sec,
-                                           curr_time.tv_nsec - prev_time.tv_nsec );
+               const struct timespec diff( 
+                  { .tv_sec  = curr_time.tv_sec  - prev_time.tv_sec,
+                    .tv_nsec = curr_time.tv_nsec - prev_time.tv_nsec } );
                prev_time = curr_time;
                /* update global time */
                const sclock_t seconds( 
