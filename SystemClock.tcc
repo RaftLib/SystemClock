@@ -29,13 +29,16 @@
 #include <unistd.h>
 
 #ifdef __APPLE__
-#include <CoreServices/CoreServices.h>
 #include <mach/mach.h>
 #include <mach/mach_time.h>
 #endif
 
 #ifdef __linux
 #include <time.h>
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE 1
+#endif
+#include <sched.h>
 #endif
 
 
@@ -114,6 +117,13 @@ private:
 
 
 
+   /**
+    * updateClock - function called by thread to update global clock,
+    * perhaps (FIXME) this would be better served as a template specialization
+    * for each of the different clock types (T).
+    * @param   clock - Clock*
+    * @param   done  - volatile bool, set to true when the updates are no longer needed.
+    */
    static void updateClock( Clock *clock , volatile bool &done )
    {
       std::function< void ( Clock* ) > function;
@@ -126,8 +136,137 @@ private:
          break;
          case( Cycle ):
          {
-            /** lock thread **/   
-            /** get cycle counter **/
+#ifdef   __linux
+            
+
+            FILE  *fp = NULL;
+            errno = 0;
+            fp = fopen("/proc/cpuinfo", "r");
+            if(fp == NULL)
+            {
+               perror( "Failed to read proc/cpuinfo!!\n" );
+               exit( EXIT_FAILURE );
+            }
+            const size_t buff_size = 20;
+            char *key = (char*) alloca(sizeof(char) * buff_size);
+            char *value = (char*) alloca(sizeof(char) * buff_size);
+            assert( key != NULL );
+            assert( value != NULL );
+            std::memset( key, '\0', buff_size );
+            std::memset( value, '\0', buff_size );
+            uint64_t frequency( 0 );
+            int count = EOF;
+            while( ( count = fscanf(fp,"%[^:]:%[^\n]\n", key, value) ) != EOF )
+            {
+               if( count == 2 ){
+                  /* TODO, not the best way to get CPU Frequency */
+                  if( strncmp( key, "cpu MHz", 7 ) == 0 )
+                  {
+                     frequency = ( uint64_t ) (atof( value ) * 1e6f );
+                     goto END;
+                  }
+               }
+            }
+         END:   
+            fclose( fp );
+                     
+            /**
+             * pin the current thread 
+             */
+            cpu_set_t   *cpuset( nullptr );
+            const int8_t   processors_to_allocate( 1 );
+            size_t cpu_allocate_size( -1 );
+#if   (__GLIBC_MINOR__ > 9 ) && (__GLIBC__ == 2 )
+            cpuset = CPU_ALLOC( processors_to_allocate );
+            assert( cpuset != nullptr );
+            cpu_allocate_size = CPU_ALLOC_SIZE( processors_to_allocate );
+            CPU_ZERO_S( cpu_allocate_size, cpuset );
+#else
+            cpu_allocate_size = sizeof( cpu_set_t );
+            cpuset = (cpu_set_t*) malloc( cpu_allocate_size );
+            //TODO maybe shouldn't be an assert, but more graceful
+            assert( cpuset != nullptr );
+            CPU_ZERO( cpuset );
+#endif
+            /** TODO, make configurable **/
+            const uint32_t assigned_processor( 0 );
+            CPU_SET( assigned_processor,
+                     cpuset );
+            errno = 0;
+            if( sched_setaffinity( 0 /* calling thread */,
+                                  cpu_allocate_size,
+                                  cpuset ) != 0 )
+            {
+               perror( "Failed to set affinity for cycle counter!!" );
+               exit( EXIT_FAILURE );
+            }
+
+            uint64_t current(  0 );
+            uint64_t previous( 0 );
+            /** begin assembly section to init previous **/
+#ifdef   __x86_64
+            uint64_t highBits = 0x0, lowBits = 0x0;
+            __asm__ volatile("\
+               lfence                           \n\
+               rdtsc                            \n\
+               movq     %%rax, %[low]           \n\
+               movq     %%rdx, %[high]"          
+               :
+               /*outputs here*/
+               [low]    "=r" (lowBits),
+               [high]   "=r" (highBits)
+               :
+               /*inputs here*/
+               :
+               /*clobbered registers*/
+               "rax","rdx"
+            );
+            previous = (lowBits & 0xffffffff) | (highBits << 32); 
+#elif    __ARMEL__
+
+#elif    __ARMHF__
+
+#else
+#warn    Cycle counter not supported on this architecture
+#endif
+
+            function = [&]( Clock *clock )
+            {
+               /** begin assembly sections **/
+#ifdef   __x86_64
+               uint64_t highBits = 0x0, lowBits = 0x0;
+               __asm__ volatile("\
+                  lfence                           \n\
+                  rdtsc                            \n\
+                  movq     %%rax, %[low]           \n\
+                  movq     %%rdx, %[high]"          
+                  :
+                  /*outputs here*/
+                  [low]    "=r" (lowBits),
+                  [high]   "=r" (highBits)
+                  :
+                  /*inputs here*/
+                  :
+                  /*clobbered registers*/
+                  "rax","rdx"
+               );
+               current = (lowBits & 0xffffffff) | (highBits << 32); 
+#elif    __ARMEL__
+
+#elif    __ARMHF__
+
+#else
+#warn    Cycle counter not supported on this architecture
+#endif
+               const uint64_t diff( current - previous );
+               previous = current;
+               /* convert to seconds for increment */
+               const sclock_t seconds( (sclock_t) diff / (sclock_t) frequency );
+               clock->increment( seconds );
+            };
+#else
+#warn    Cycle counter currently supported for Linux only
+#endif
          }
          break;
          case( System ):
