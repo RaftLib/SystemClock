@@ -22,9 +22,11 @@
 #include <thread>
 #include <cstdint>
 #include <cstdlib>
+#include <functional>
 
 enum SystemType { Linux_x86, Linux_ARM, Darwin };
-enum ClockType  { 
+enum ClockType  { Dummy, Cycle, System };
+
 typedef long double sclock_t;
 
 template < SystemType type, ClockType T > class SystemClock {
@@ -59,7 +61,7 @@ public:
 
 
 private:
-   template < ClockType T > class Clock {
+   class Clock {
    public:
       Clock() : a( 0.0 ),
                 b( 0.0 )
@@ -69,6 +71,12 @@ private:
       {
          a++;
          b++;
+      }
+
+      void increment( sclock_t inc )
+      {
+         a += inc;
+         b += inc;
       }
 
       sclock_t read()
@@ -91,16 +99,48 @@ private:
 
 
 
-
    static void updateClock( Clock *clock , volatile bool &done )
    {
+      std::function< void ( Clock* ) > function;
+      switch( T )
+      {
+         case( Dummy ):
+         {
+            function = []( Clock *clock ){ clock->increment(); };
+         }
+         break;
+         case( Cycle ):
+         {
+            assert( false );
+         }
+         break;
+         case( System ):
+         {
+#ifdef   __linux
+            function = []( Clock *clock )
+            {
+               static struct timespec prev_time;
+               errno = 0;
+               //FIXME
+               if( clock_gettime( CLOCK_REALTIME,  );
+            };
+#elif defined __APPLE__
+
+#else
+
+#endif
+         }
+         break;
+         default:
+            break;
+      }
       while( ! done )
       {
-         clock->increment(); 
+         function( clock );
       }
    }
    
-   Clock< T >        *clock;
+   Clock             *clock;
    std::thread       *updater;
    volatile bool     stop;
 
