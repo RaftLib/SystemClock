@@ -21,16 +21,20 @@
 #include <cstdlib>
 #include <cstdint>
 #include <iostream>
+#include <thread>
+#include <chrono>
 #include "SystemClock.tcc"
 
 int 
 main( int argc, char **argv )
 {
    SystemClock< Linux_x86 > clock;
-
+   std::chrono::milliseconds dura( 2000 );
+   std::this_thread::sleep_for( dura );
    std::cerr << clock.getTime() << "\n";
    std::cerr << clock.getTime() << "\n";
    std::cerr << clock.getTime() << "\n";
    std::cerr << clock.getTime() << "\n";
+   clock.done();
    return( EXIT_SUCCESS );
 }

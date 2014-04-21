@@ -28,23 +28,36 @@ typedef long double sclock_t;
 
 template < SystemType type > class SystemClock {
 public:
-   SystemClock() : updater( updateClock, std::ref( clock ) )
+   SystemClock() : clock(   nullptr ),
+                   updater( nullptr ),
+                   stop(    false )
    {
+      clock    = new Clock();
+      updater  = new std::thread( updateClock, clock , std::ref( stop ) );
    }
 
    virtual ~SystemClock()
    {
-      updater.join();
+      updater->join();
+      delete( updater );
+      updater = nullptr;
+      delete( clock );
+      clock = nullptr;
    }
 
    
    sclock_t getTime()
    {
-      return( clock.read() );
+      return( clock->read() );
+   }
+
+   void     done()
+   {
+      stop = true;
    }
 
 
-protected:
+private:
    class Clock {
    public:
       Clock() : a( 0.0 ),
@@ -73,19 +86,22 @@ protected:
    private:
       volatile sclock_t a;
       volatile sclock_t b;
-   } clock;
+   };
 
 
-   static void updateClock( Clock &clock_v )
+
+
+   static void updateClock( Clock *clock , volatile bool &done )
    {
-      while( true )
+      while( ! done )
       {
-         clock_v.clock.increment();
+         clock->increment(); 
       }
    }
+   
+   Clock             *clock;
+   std::thread       *updater;
+   volatile bool     stop;
 
-private:
-
-   std::thread updater;
 };
 #endif /* END _SYSTEMCLOCK_HPP_ */
