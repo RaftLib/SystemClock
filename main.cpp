@@ -28,8 +28,9 @@
 int 
 main( int argc, char **argv )
 {
-   SystemClock< Linux_x86, System > clock;
-   std::chrono::milliseconds dura( 2000 );
+   const int milliseconds( atoi( argv[ 1 ] ) );
+   SystemClock< System > clock;
+   std::chrono::milliseconds dura( milliseconds );
    std::this_thread::sleep_for( dura );
    std::cerr << clock.getTime() << "\n";
    std::cerr << clock.getTime() << "\n";

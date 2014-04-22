@@ -42,12 +42,20 @@
 #endif
 
 
-enum SystemType { Linux_x86, Linux_ARM, Darwin };
+/**
+ * TODO:
+ * 1) Add new constructor for allocating in SHM
+ * 2) Add accessor for getting SHM Key to open
+ * 3) Add accessor to open SHM for new processes 
+ *    to use the counter.
+ * 4) Assess the resolution of the mach time methods
+ */
+
 enum ClockType  { Dummy, Cycle, System };
 
 typedef long double sclock_t;
 
-template < SystemType type, ClockType T > class SystemClock {
+template < ClockType T > class SystemClock {
 public:
    SystemClock() : clock(   nullptr ),
                    updater( nullptr ),
@@ -227,7 +235,7 @@ private:
 #elif    __ARMHF__
 
 #else
-#warn    Cycle counter not supported on this architecture
+#warning    Cycle counter not supported on this architecture
 #endif
 
             function = [&]( Clock *clock )
@@ -256,7 +264,7 @@ private:
 #elif    __ARMHF__
 
 #else
-#warn    Cycle counter not supported on this architecture
+#warning    Cycle counter not supported on this architecture
 #endif
                const uint64_t diff( current - previous );
                previous = current;
@@ -265,7 +273,7 @@ private:
                clock->increment( seconds );
             };
 #else
-#warn    Cycle counter currently supported for Linux only
+#warning    Cycle counter currently supported for Linux only
 #endif
          }
          break;
