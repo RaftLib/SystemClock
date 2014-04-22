@@ -36,6 +36,5 @@ main( int argc, char **argv )
    std::cerr << clock.getTime() << "\n";
    std::cerr << clock.getTime() << "\n";
    std::cerr << clock.getTime() << "\n";
-   clock.done();
    return( EXIT_SUCCESS );
 }

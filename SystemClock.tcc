@@ -67,6 +67,7 @@ public:
 
    virtual ~SystemClock()
    {
+      stop = true;
       updater->join();
       delete( updater );
       updater = nullptr;
@@ -80,10 +81,6 @@ public:
       return( clock->read() );
    }
 
-   void     done()
-   {
-      stop = true;
-   }
 
 
 private:
