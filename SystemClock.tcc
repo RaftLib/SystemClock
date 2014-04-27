@@ -19,7 +19,6 @@
  */
 #ifndef _SYSTEMCLOCK_HPP_
 #define _SYSTEMCLOCK_HPP_  1
-#include <thread>
 #include <cstdint>
 #include <cstdlib>
 #include <functional>
@@ -27,6 +26,7 @@
 #include <cstdint>
 #include <cstring>
 #include <unistd.h>
+#include <pthread.h>
 
 #ifdef __APPLE__
 #include <mach/mach.h>
@@ -57,28 +57,26 @@ typedef long double sclock_t;
 
 template < ClockType T > class SystemClock {
 public:
-   SystemClock() : clock(   nullptr ),
-                   updater( nullptr ),
-                   stop(    false )
+   SystemClock() : updater( 0 )
    {
-      clock    = new Clock();
-      updater  = new std::thread( updateClock, clock , std::ref( stop ) );
+      thread_data.done = false;
+      thread_data.clock = new Clock();
+      pthread_create( &updater, nullptr, updateClock, (void*) &thread_data );
    }
 
    virtual ~SystemClock()
    {
-      stop = true;
-      updater->join();
-      delete( updater );
-      updater = nullptr;
-      delete( clock );
-      clock = nullptr;
+      thread_data.done = true;
+      pthread_join( updater, nullptr );
+      
+      delete( thread_data.clock );
+      thread_data.clock = nullptr;
    }
 
    
    sclock_t getTime()
    {
-      return( clock->read() );
+      return( thread_data.clock->read() );
    }
 
 
@@ -120,17 +118,24 @@ private:
       volatile sclock_t b;
    };
 
+   struct ThreadData{
+      ThreadData() : clock( nullptr ),
+                     done(  false )
+      {
+      }
 
+      Clock         *clock;
+      volatile bool done;
+   } thread_data ;
 
    /**
     * updateClock - function called by thread to update global clock,
-    * perhaps (FIXME) this would be better served as a template specialization
-    * for each of the different clock types (T).
-    * @param   clock - Clock*
-    * @param   done  - volatile bool, set to true when the updates are no longer needed.
     */
-   static void updateClock( Clock *clock , volatile bool &done )
+   static void* updateClock( void *data )
    {
+      ThreadData *d( reinterpret_cast< ThreadData* >( data ) );
+      Clock         *clock( d->clock );
+      volatile bool &done(   d->done );
       std::function< void ( Clock* ) > function;
       switch( T )
       {
@@ -336,11 +341,10 @@ private:
       {
          function( clock );
       }
+      pthread_exit( nullptr );
    }
-   
-   Clock             *clock;
-   std::thread       *updater;
-   volatile bool     stop;
+
+   pthread_t         updater;
 
 };
 #endif /* END _SYSTEMCLOCK_HPP_ */

@@ -3,16 +3,22 @@ CFLAGS   = -std=c99 -O3
 
 CXXFILES = main
 CC = clang
-CXX = clang++
+CXX ?= clang++
 
-LIBS =-lpthread -lrt
+ifneq ($(shell uname -s), Darwin)
+RT = -lrt
+STATIC = -static -static-libstdc++
+endif
+
+LIBS =-lpthread $(RT)
+
 
 OBJS  = $(addsuffix .o, $(CXXFILES)) $(addsuffix .o, $(CFILES))
 FILES = $(addsuffix .cpp, $(CXXFILES)) $(addsuffix .c, $(CFILES))
 
 clock: $(FILES)
 	$(MAKE) $(OBJS)
-	clang++ $(CXXFLAGS) -o clock $(OBJS) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(STATIC) -o clock $(OBJS) $(LIBS)
 
 clean:
 	rm -rf $(OBJS) clock
