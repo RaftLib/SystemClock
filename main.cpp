@@ -21,17 +21,16 @@
 #include <cstdlib>
 #include <cstdint>
 #include <iostream>
-#include <thread>
 #include <chrono>
+#include <unistd.h>
 #include "SystemClock.tcc"
 
 int 
 main( int argc, char **argv )
 {
-   const int milliseconds( atoi( argv[ 1 ] ) );
-   SystemClock< System > clock;
-   std::chrono::milliseconds dura( milliseconds );
-   std::this_thread::sleep_for( dura );
+   const int microseconds( atoi( argv[ 1 ] ) );
+   SystemClock< Cycle > clock;
+   usleep( (useconds_t) microseconds );
    std::cerr << clock.getTime() << "\n";
    std::cerr << clock.getTime() << "\n";
    std::cerr << clock.getTime() << "\n";

@@ -59,18 +59,21 @@ template < ClockType T > class SystemClock {
 public:
    SystemClock() : updater( 0 )
    {
-      thread_data.done = false;
-      thread_data.clock = new Clock();
-      pthread_create( &updater, nullptr, updateClock, (void*) &thread_data );
+      errno = 0;
+      if( pthread_create( &updater, 
+                          nullptr, 
+                          updateClock, 
+                          (void*) &thread_data ) != 0 )
+      {
+         perror( "Failed to create timer thread, exiting." );
+         exit( EXIT_FAILURE );
+      }
    }
 
    virtual ~SystemClock()
    {
       thread_data.done = true;
       pthread_join( updater, nullptr );
-      
-      delete( thread_data.clock );
-      thread_data.clock = nullptr;
    }
 
    
@@ -122,6 +125,14 @@ private:
       ThreadData() : clock( nullptr ),
                      done(  false )
       {
+         clock = new Clock();
+      }
+
+      ~ThreadData()
+      {
+         delete( clock );
+         clock = nullptr;
+         done = true;
       }
 
       Clock         *clock;
@@ -147,8 +158,6 @@ private:
          case( Cycle ):
          {
 #ifdef   __linux
-            
-
             FILE  *fp = NULL;
             errno = 0;
             fp = fopen("/proc/cpuinfo", "r");
@@ -335,7 +344,10 @@ private:
          }
          break;
          default:
-            break;
+         {
+            assert( false );
+         }
+         break;
       }
       while( ! done )
       {

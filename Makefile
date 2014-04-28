@@ -1,8 +1,8 @@
 CXXFLAGS = -std=c++11 -O3
-CFLAGS   = -std=c99 -O3
+CFLAGS   = -std=c99   -O3
 
 CXXFILES = main
-CC = clang
+CC  ?= clang
 CXX ?= clang++
 
 ifneq ($(shell uname -s), Darwin)
