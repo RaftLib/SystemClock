@@ -1,7 +1,7 @@
 /**
- * main.cpp - 
+ * ClockBase.hpp - 
  * @author: Jonathan Beard
- * @version: Sun Apr 20 15:37:04 2014
+ * @version: Thu May 29 14:23:18 2014
  * 
  * Copyright 2014 Jonathan Beard
  * 
@@ -17,23 +17,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef _CLOCKBASE_HPP_
+#define _CLOCKBASE_HPP_  1
 
-#include <cstdlib>
-#include <cstdint>
-#include <iostream>
-#include <chrono>
-#include <unistd.h>
-#include "SystemClock.tcc"
+typedef long double sclock_t;
 
-int 
-main( int argc, char **argv )
+class ClockBase
 {
-   const int microseconds( atoi( argv[ 1 ] ) );
-   SystemClock< System > clock;
-   usleep( (useconds_t) microseconds );
-   std::cerr << clock.getTime() << "\n";
-   std::cerr << clock.getTime() << "\n";
-   std::cerr << clock.getTime() << "\n";
-   std::cerr << clock.getTime() << "\n";
-   return( EXIT_SUCCESS );
-}
+public:
+   ClockBase();
+   virtual ~ClockBase();
+
+   virtual sclock_t getTime() = 0;
+
+   sclock_t getResolution();
+
+private:
+   static sclock_t   *resolution;
+};
+#endif /* END _CLOCKBASE_HPP_ */

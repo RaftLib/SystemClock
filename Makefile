@@ -1,9 +1,9 @@
-CXXFLAGS = -std=c++11 -O3
-CFLAGS   = -std=c99   -O3
+CXXFLAGS = -std=c++11 -O0 -g
+CFLAGS   = -std=c99   -O0 -g
 
 CXXFILES = main
-CC  ?= clang
-CXX ?= clang++
+CC   = clang
+CXX  = clang++
 
 ifneq ($(shell uname -s), Darwin)
 RT = -lrt

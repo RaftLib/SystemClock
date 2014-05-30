@@ -1,7 +1,7 @@
 /**
- * main.cpp - 
+ * ClockBase.cpp - 
  * @author: Jonathan Beard
- * @version: Sun Apr 20 15:37:04 2014
+ * @version: Thu May 29 14:23:18 2014
  * 
  * Copyright 2014 Jonathan Beard
  * 
@@ -17,23 +17,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "ClockBase.hpp"
 
-#include <cstdlib>
-#include <cstdint>
-#include <iostream>
-#include <chrono>
-#include <unistd.h>
-#include "SystemClock.tcc"
+sclock_t *ClockBase::resolution = nullptr;
 
-int 
-main( int argc, char **argv )
+ClockBase::ClockBase()
 {
-   const int microseconds( atoi( argv[ 1 ] ) );
-   SystemClock< System > clock;
-   usleep( (useconds_t) microseconds );
-   std::cerr << clock.getTime() << "\n";
-   std::cerr << clock.getTime() << "\n";
-   std::cerr << clock.getTime() << "\n";
-   std::cerr << clock.getTime() << "\n";
-   return( EXIT_SUCCESS );
+}
+
+
+ClockBase::~ClockBase()
+{
+
+}
+
+
+sclock_t
+ClockBase::getResolution()
+{
 }

@@ -27,6 +27,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <pthread.h>
+#include "ClockBase.hpp"
 
 #ifdef __APPLE__
 #include <mach/mach.h>
@@ -53,9 +54,7 @@
 
 enum ClockType  { Dummy, Cycle, System };
 
-typedef long double sclock_t;
-
-template < ClockType T > class SystemClock {
+template < ClockType T > class SystemClock : public ClockBase {
 public:
    SystemClock() : updater( 0 )
    {
@@ -77,7 +76,7 @@ public:
    }
 
    
-   sclock_t getTime()
+   virtual sclock_t getTime()
    {
       return( thread_data.clock->read() );
    }
