@@ -1,13 +1,13 @@
 CXXFLAGS = -std=c++11 -O0 -g
 CFLAGS   = -std=c99   -O0 -g
 
-CXXFILES = main
+CXXFILES = main Clock
 CC   = clang
 CXX  = clang++
 
 ifneq ($(shell uname -s), Darwin)
 RT = -lrt
-STATIC = -static -static-libstdc++
+#STATIC = -static -static-libstdc++
 endif
 
 LIBS =-lpthread $(RT)

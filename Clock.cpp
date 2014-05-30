@@ -1,5 +1,5 @@
 /**
- * ClockBase.hpp - 
+ * Clock.cpp - 
  * @author: Jonathan Beard
  * @version: Thu May 29 14:23:18 2014
  * 
@@ -17,22 +17,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef _CLOCKBASE_HPP_
-#define _CLOCKBASE_HPP_  1
+#include "Clock.hpp"
 
-typedef long double sclock_t;
+sclock_t *Clock::resolution = nullptr;
 
-class ClockBase
+Clock::Clock()
 {
-public:
-   ClockBase();
-   virtual ~ClockBase();
+}
 
-   virtual sclock_t getTime() = 0;
 
-   sclock_t getResolution();
+Clock::~Clock()
+{
 
-private:
-   static sclock_t   *resolution;
-};
-#endif /* END _CLOCKBASE_HPP_ */
+}
+
+
+sclock_t
+Clock::getResolution()
+{
+   return( (sclock_t) 1.0 );
+}

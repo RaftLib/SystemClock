@@ -27,7 +27,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <pthread.h>
-#include "ClockBase.hpp"
+#include "Clock.hpp"
 
 #ifdef __APPLE__
 #include <mach/mach.h>
@@ -54,7 +54,7 @@
 
 enum ClockType  { Dummy, Cycle, System };
 
-template < ClockType T > class SystemClock : public ClockBase {
+template < ClockType T > class SystemClock : public Clock {
 public:
    SystemClock() : updater( 0 )
    {
@@ -311,7 +311,8 @@ private:
                prev_time = curr_time;
                /* update global time */
                const sclock_t seconds( 
-                     (sclock_t ) diff.tv_sec + ( ( sclock_t ) diff.tv_nsec * 1.0e-9 ) );
+                     (sclock_t ) diff.tv_sec + 
+                        ( ( sclock_t ) diff.tv_nsec * 1.0e-9 ) );
                clock->increment( seconds );
             };
 #elif defined __APPLE__
@@ -334,7 +335,8 @@ private:
                 * figure out what units the return val is in.
                 */
                 
-                const uint64_t elapsedNano( diff * sTimebaseInfo.numer / sTimebaseInfo.denom );
+                const uint64_t elapsedNano( diff * sTimebaseInfo.numer / 
+                                                   sTimebaseInfo.denom );
                 
                 const sclock_t seconds( (sclock_t) elapsedNano * 1.0e-9 );
                 clock->increment( seconds );
