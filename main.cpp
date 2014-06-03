@@ -29,11 +29,15 @@ int
 main( int argc, char **argv )
 {
    const int microseconds( atoi( argv[ 1 ] ) );
-   SystemClock< System > clock;
+   SystemClock< Cycle > clock;
+   std::cerr << "Start: " << clock.getTime() << "\n";
    usleep( (useconds_t) microseconds );
    std::cerr << clock.getTime() << "\n";
+   usleep( (useconds_t) microseconds );
    std::cerr << clock.getTime() << "\n";
+   usleep( (useconds_t) microseconds );
    std::cerr << clock.getTime() << "\n";
+   usleep( (useconds_t) microseconds );
    std::cerr << clock.getTime() << "\n";
    return( EXIT_SUCCESS );
 }

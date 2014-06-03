@@ -86,17 +86,11 @@ public:
 private:
    class Clock {
    public:
-      Clock() : a( 0.0 ),
-                b( 0.0 )
+      Clock() : a( (sclock_t) 0 ),
+                b( (sclock_t) 0 )
       {}
       
-      void increment()
-      {
-         a++;
-         b++;
-      }
-
-      void increment( sclock_t inc )
+      void increment( const sclock_t inc = (sclock_t) 1 )
       {
          a += inc;
          b += inc;
@@ -192,9 +186,9 @@ private:
              * pin the current thread 
              */
             cpu_set_t   *cpuset( nullptr );
-            const int8_t   processors_to_allocate( 1 );
             size_t cpu_allocate_size( -1 );
 #if   (__GLIBC_MINOR__ > 9 ) && (__GLIBC__ == 2 )
+            const int8_t   processors_to_allocate( 1 );
             cpuset = CPU_ALLOC( processors_to_allocate );
             assert( cpuset != nullptr );
             cpu_allocate_size = CPU_ALLOC_SIZE( processors_to_allocate );
@@ -218,14 +212,12 @@ private:
                perror( "Failed to set affinity for cycle counter!!" );
                exit( EXIT_FAILURE );
             }
-
             uint64_t current(  0 );
             uint64_t previous( 0 );
             /** begin assembly section to init previous **/
 #ifdef   __x86_64
             uint64_t highBits = 0x0, lowBits = 0x0;
             __asm__ volatile("\
-               lfence                           \n\
                rdtsc                            \n\
                movq     %%rax, %[low]           \n\
                movq     %%rdx, %[high]"          
@@ -241,9 +233,9 @@ private:
             );
             previous = (lowBits & 0xffffffff) | (highBits << 32); 
 #elif    __ARMEL__
-
+#warning    Cycle counter not supported on this architecture
 #elif    __ARMHF__
-
+#warning    Cycle counter not supported on this architecture
 #else
 #warning    Cycle counter not supported on this architecture
 #endif
@@ -254,7 +246,6 @@ private:
 #ifdef   __x86_64
                uint64_t highBits = 0x0, lowBits = 0x0;
                __asm__ volatile("\
-                  lfence                           \n\
                   rdtsc                            \n\
                   movq     %%rax, %[low]           \n\
                   movq     %%rdx, %[high]"          
@@ -268,11 +259,11 @@ private:
                   /*clobbered registers*/
                   "rax","rdx"
                );
-               current = (lowBits & 0xffffffff) | (highBits << 32); 
+               current = (lowBits & 0xffffffff) | (highBits << 32);
 #elif    __ARMEL__
-
+#warning    Cycle counter not supported on this architecture
 #elif    __ARMHF__
-
+#warning    Cycle counter not supported on this architecture
 #else
 #warning    Cycle counter not supported on this architecture
 #endif

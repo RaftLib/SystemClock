@@ -35,5 +35,6 @@ Clock::~Clock()
 sclock_t
 Clock::getResolution()
 {
+   //TODO, plug in calibration code
    return( (sclock_t) 1.0 );
 }
