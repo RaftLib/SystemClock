@@ -216,7 +216,6 @@ private:
             uint64_t previous( 0 );
             /** begin assembly section to init previous **/
 #ifdef   __x86_64
-            uint32_t highBits = 0x0, lowBits = 0x0;
             __asm__ volatile("\
                xorq     %%rax , %%rax     \n\
                xorq     %%rcx , %%rcx     \n\
@@ -234,8 +233,6 @@ private:
                /*clobbered registers*/
                "rcx","rax","rdx"
             );
-//            previous = (lowBits & 0xffffffff);
-//            previous = previous | (highBits << 32); 
 #elif    __ARMEL__
 #warning    Cycle counter not supported on this architecture
 #elif    __ARMHF__
