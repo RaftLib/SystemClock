@@ -23,13 +23,15 @@
 #include <iostream>
 #include <chrono>
 #include <unistd.h>
+#include <fstream>
+#include <array>
 #include "SystemClock.tcc"
 
-#define TESTCLOCK 1
+#define TESTPERIOD 1
 int 
 main( int argc, char **argv )
 {
-   SystemClock< Cycle > clock;   
+   SystemClock< System > clock;   
 #ifdef TESTCLOCK   
    const int microseconds( atoi( argv[ 1 ] ) );
    auto start = clock.getTime();
@@ -46,18 +48,23 @@ main( int argc, char **argv )
    std::cerr << (clock.getTime() - start) << "\n";
    start = clock.getTime();
 #elif defined TESTPERIOD
-   size_t count( 1e6 );
+   const size_t count( 1e6 );
    std::ofstream ofs( argv[ 1 ] );
    if( ! ofs.is_open() )
    {
       std::cerr << "Failed to open output file!!\n";
       exit( EXIT_FAILURE );
    }
-   std::array< sclock_t, 
-   while(count--)
+   std::array< sclock_t, count > update_array; 
+   for( size_t index( 0 ); index < count; index++ )
    {
-      ofs << clock.getTime();
+      update_array[ index ] = clock.getTime();
    }
+   for( size_t index( 1 ); index < count; index++ )
+   {
+      ofs << ( update_array[ index ] - update_array[ index - 1 ] ) << "\n";  
+   }
+   ofs.close();
 #endif
    return( EXIT_SUCCESS );
 }
