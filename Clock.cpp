@@ -17,11 +17,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <array>
+#include <cstdint>
+#include <iostream>
 #include "Clock.hpp"
 
-sclock_t *Clock::resolution = nullptr;
-
-Clock::Clock()
+Clock::Clock() : resolution( nullptr )
 {
 }
 
@@ -35,6 +36,50 @@ Clock::~Clock()
 sclock_t
 Clock::getResolution()
 {
-   //TODO, plug in calibration code
-   return( (sclock_t) 1.0 );
+   if( (this)->resolution != nullptr )
+   {
+      return( *resolution );
+   }
+   const size_t count( 1e6 );
+   std::array< sclock_t , count > update_array; 
+   for( size_t index( 0 ); index < count; index++ )
+   {
+      update_array[ index ] = getTime();
+   }
+   struct Mean{
+      Mean() : total( 0.0 ),
+               n( 0 )
+      {}
+
+      sclock_t   total;
+      uint64_t n;
+      
+      sclock_t get()
+      {
+         return( total / n );
+      }
+      void operator += (const sclock_t val )
+      {
+         total += val;
+         n++;
+      }
+
+      std::ostream& print( std::ostream &stream )
+      {
+         stream << get();
+         return( stream );
+      }
+   } mean;
+
+   for( size_t index( 1 ); index < count; index++ )
+   {
+      const sclock_t val( update_array[ index ] - update_array[ index - 1 ] );
+      if( val > 1e-12 ) /** something lower than we'd expect resolution to be **/
+      {
+         mean += val; 
+      }
+   }
+   resolution = new sclock_t();
+   *resolution = mean.get();
+   return( *resolution );
 }

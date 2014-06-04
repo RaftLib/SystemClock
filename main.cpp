@@ -27,7 +27,7 @@
 #include <array>
 #include "SystemClock.tcc"
 
-#define TESTPERIOD 1
+#define RESOLUTION 1
 int 
 main( int argc, char **argv )
 {
@@ -93,6 +93,8 @@ main( int argc, char **argv )
    std::cout << "Mean resolution: ";
    mean.print( std::cout ) << "\n";
    ofs.close();
+#elif defined RESOLUTION
+   std::cout << "Resolution: " << clock.getResolution() << "\n";
 #endif
    return( EXIT_SUCCESS );
 }

@@ -33,6 +33,6 @@ public:
    sclock_t getResolution();
 
 private:
-   static sclock_t   *resolution;
+   sclock_t   *resolution;
 };
 #endif /* END _CLOCK_HPP_ */
