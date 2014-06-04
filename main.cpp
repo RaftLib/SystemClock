@@ -55,15 +55,43 @@ main( int argc, char **argv )
       std::cerr << "Failed to open output file!!\n";
       exit( EXIT_FAILURE );
    }
-   std::array< sclock_t, count > update_array; 
+   std::array< sclock_t , count > update_array; 
    for( size_t index( 0 ); index < count; index++ )
    {
       update_array[ index ] = clock.getTime();
    }
+   struct Mean{
+      Mean() : total( 0.0 ),
+               n( 0 )
+      {}
+
+      double   total;
+      uint64_t n;
+
+      void operator += (const float val )
+      {
+         total += val;
+         n++;
+      }
+
+      std::ostream& print( std::ostream &stream )
+      {
+         stream << (total / n );
+         return( stream );
+      }
+   } mean;
+
    for( size_t index( 1 ); index < count; index++ )
    {
-      ofs << ( update_array[ index ] - update_array[ index - 1 ] ) << "\n";  
+      const float val( update_array[ index ] - update_array[ index - 1 ] );
+      if( val > 1e-12 ) /** something lower than we'd expect resolution to be **/
+      {
+         mean += val; 
+      }
+      ofs << ( val ) << "\n";  
    }
+   std::cout << "Mean resolution: ";
+   mean.print( std::cout ) << "\n";
    ofs.close();
 #endif
    return( EXIT_SUCCESS );

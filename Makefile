@@ -1,5 +1,5 @@
-CXXFLAGS = -std=c++11 -O3
-CFLAGS   = -std=c99   -O3 
+CXXFLAGS = -std=c++11 -O0 
+CFLAGS   = -std=c99   -O0 
 
 CXXFILES = main Clock
 CC   = gcc
