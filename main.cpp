@@ -25,11 +25,13 @@
 #include <unistd.h>
 #include "SystemClock.tcc"
 
+#define TESTCLOCK 1
 int 
 main( int argc, char **argv )
 {
+   SystemClock< Cycle > clock;   
+#ifdef TESTCLOCK   
    const int microseconds( atoi( argv[ 1 ] ) );
-   SystemClock< System > clock;
    auto start = clock.getTime();
    usleep( (useconds_t) microseconds );
    std::cerr << (clock.getTime() - start) << "\n";
@@ -43,5 +45,19 @@ main( int argc, char **argv )
    usleep( (useconds_t) microseconds );
    std::cerr << (clock.getTime() - start) << "\n";
    start = clock.getTime();
+#elif defined TESTPERIOD
+   size_t count( 1e6 );
+   std::ofstream ofs( argv[ 1 ] );
+   if( ! ofs.is_open() )
+   {
+      std::cerr << "Failed to open output file!!\n";
+      exit( EXIT_FAILURE );
+   }
+   std::array< sclock_t, 
+   while(count--)
+   {
+      ofs << clock.getTime();
+   }
+#endif
    return( EXIT_SUCCESS );
 }
