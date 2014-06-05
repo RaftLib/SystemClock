@@ -31,7 +31,7 @@
 int 
 main( int argc, char **argv )
 {
-   SystemClock< System > clock;   
+   SystemClock< Cycle > clock( atoi( argv[ 1 ] ) );   
 #ifdef TESTCLOCK   
    const int microseconds( atoi( argv[ 1 ] ) );
    auto start = clock.getTime();

@@ -42,6 +42,7 @@
 #include <sched.h>
 #endif
 
+#define sched_getcpu() \
 
 /**
  * TODO:
@@ -52,12 +53,13 @@
  * 4) Fix the latency issue (time for system calls and assembly code 
  */
 
-enum ClockType  { Auto, Dummy, Cycle, System };
+enum ClockType  { Dummy, Cycle, System };
 
 template < ClockType T > class SystemClock : public Clock {
 public:
-   SystemClock() : updater( 0 )
+   SystemClock( int core  = 0) : updater( 0 )
    {
+      thread_data.core = core;
       init();
    }
 
@@ -124,7 +126,8 @@ private:
    struct ThreadData{
       ThreadData() : clock( nullptr ),
                      done(  false ),
-                     setup( false )
+                     setup( false ),
+                     core( 0 )
       {
          clock = new Clock();
       }
@@ -139,6 +142,7 @@ private:
       Clock         *clock;
       volatile bool done;
       volatile bool setup;
+      int           core;
    } thread_data ;
 
    /**
@@ -205,13 +209,11 @@ private:
 #else
             cpu_allocate_size = sizeof( cpu_set_t );
             cpuset = (cpu_set_t*) malloc( cpu_allocate_size );
-            //TODO maybe shouldn't be an assert, but more graceful
             assert( cpuset != nullptr );
             CPU_ZERO( cpuset );
 #endif
             /** TODO, make configurable **/
-            const uint32_t assigned_processor( 0 );
-            CPU_SET( assigned_processor,
+            CPU_SET( d->core,
                      cpuset );
             errno = 0;
             if( sched_setaffinity( 0 /* calling thread */,
@@ -221,8 +223,9 @@ private:
                perror( "Failed to set affinity for cycle counter!!" );
                exit( EXIT_FAILURE );
             }
-            while( sched_getcpu() != assigned_processor );
-            
+            /** wait till we know we're on the right processor **/
+            pthread_yield();
+            /** get to the timing, previous is captured by the lambda function **/
             uint64_t previous( 0 );
             /** begin assembly section to init previous **/
 #ifdef   __x86_64
