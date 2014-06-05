@@ -29,7 +29,11 @@ Clock::Clock() : resolution( nullptr )
 
 Clock::~Clock()
 {
-
+   if( resolution != nullptr )
+   {
+      delete( resolution );
+   }
+   resolution = nullptr;
 }
 
 

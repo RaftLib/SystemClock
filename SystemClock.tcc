@@ -49,25 +49,16 @@
  * 2) Add accessor for getting SHM Key to open
  * 3) Add accessor to open SHM for new processes 
  *    to use the counter.
- * 4) Assess the resolution of the mach time methods
+ * 4) Fix the latency issue (time for system calls and assembly code 
  */
 
-enum ClockType  { Dummy, Cycle, System };
+enum ClockType  { Auto, Dummy, Cycle, System };
 
 template < ClockType T > class SystemClock : public Clock {
 public:
    SystemClock() : updater( 0 )
    {
-      errno = 0;
-      if( pthread_create( &updater, 
-                          nullptr, 
-                          updateClock, 
-                          (void*) &thread_data ) != 0 )
-      {
-         perror( "Failed to create timer thread, exiting." );
-         exit( EXIT_FAILURE );
-      }
-      while( ! thread_data.setup ); /* spin */
+      init();
    }
 
    virtual ~SystemClock()
@@ -85,6 +76,21 @@ public:
 
 
 private:
+
+   void init()
+   {
+      errno = 0;
+      if( pthread_create( &updater, 
+                          nullptr, 
+                          updateClock, 
+                          (void*) &thread_data ) != 0 )
+      {
+         perror( "Failed to create timer thread, exiting." );
+         exit( EXIT_FAILURE );
+      }
+      while( ! thread_data.setup ); /* spin */
+   }
+
    class Clock {
    public:
       Clock() : a( (sclock_t) 0 ),
@@ -215,6 +221,8 @@ private:
                perror( "Failed to set affinity for cycle counter!!" );
                exit( EXIT_FAILURE );
             }
+            while( sched_getcpu() != assigned_processor );
+            
             uint64_t previous( 0 );
             /** begin assembly section to init previous **/
 #ifdef   __x86_64
@@ -271,21 +279,22 @@ private:
                   /*clobbered registers*/
                   "rax","eax","rcx","ecx","rdx"
                );
-#elif    __ARMEL__
-#warning    Cycle counter not supported on this architecture
-#elif    __ARMHF__
-#warning    Cycle counter not supported on this architecture
-#else
-#warning    Cycle counter not supported on this architecture
-#endif
                /* convert to seconds for increment */
                const sclock_t seconds( (sclock_t) difference / 
                                        (sclock_t) frequency );
 
                clock->increment( seconds );
+#elif    __ARMEL__
+               clock->increment();
+#elif    __ARMHF__
+               clock->increment();
+#else
+               clock->increment();
+#endif
             };
 #else
 #warning    Cycle counter currently supported for Linux only
+            function = []( Clock *clock ){ clock->increment(); };
 #endif
          }
          break;
@@ -318,10 +327,8 @@ private:
                clock->increment( seconds );
             };
 #elif defined __APPLE__
-            uint64_t  current( 0 );
-            uint64_t  previous( 0 );
+            uint64_t  previous( mach_absolute_time() );
             /** init **/
-            previous = mach_absolute_time();
             static mach_timebase_info_data_t sTimebaseInfo;
             if( sTimebaseInfo.denom == 0 )
             {
@@ -329,8 +336,8 @@ private:
             }
             function = [&]( Clock *clock )
             {
-               current = mach_absolute_time();
-               const uint64_t diff( current - previous );
+               const auto current( mach_absolute_time() );
+               const auto diff( current - previous );
                previous = current;
                /** 
                 * TODO, fix this, there's gotta be a better way
