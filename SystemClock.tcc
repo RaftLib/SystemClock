@@ -90,7 +90,10 @@ private:
          perror( "Failed to create timer thread, exiting." );
          exit( EXIT_FAILURE );
       }
-      while( ! thread_data.setup ); /* spin */
+      while( ! thread_data.setup )
+      {
+         __asm__ volatile ("pause" : : :);
+      }
    }
 
    class Clock {
