@@ -320,7 +320,7 @@ private:
 #endif
             };
 #else
-#warning    Cycle counter currently supported for Linux only
+#warning    Cycle counter currently supported for Linux only, defaulting to dummy counter!
             function = []( Clock *clock ){ clock->increment(); };
 #endif
          }
