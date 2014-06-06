@@ -229,14 +229,21 @@ private:
             uint64_t previous( 0 );
             /** begin assembly section to init previous **/
 #ifdef   __x86_64
-            __asm__ volatile("\
-               xorl     %%eax , %%eax     \n\
-               xorl     %%ecx , %%ecx     \n\
-               cpuid                            \n\
+            __asm__ volatile(
+#if __AVX__  
+             "\
+               lfence                           \n\
                rdtsc                            \n\
                shl      $32, %%rdx              \n\
                orq      %%rax, %%rdx            \n\
                movq     %%rdx, %[prev]"
+#else
+             "\
+               rdtscp                           \n\
+               shl      $32, %%rdx              \n\
+               orq      %%rax, %%rdx            \n\
+               movq     %%rdx, %[prev]"
+#endif
                :
                /*outputs here*/
                [prev]    "=r" (previous)
