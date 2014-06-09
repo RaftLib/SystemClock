@@ -156,12 +156,12 @@ private:
       ThreadData *d( reinterpret_cast< ThreadData* >( data ) );
       Clock         *clock( d->clock );
       volatile bool &done(   d->done );
-      std::function< void ( Clock* ) > function;
+      std::function< void () > function;
       switch( T )
       {
          case( Dummy ):
          {
-            function = []( Clock *clock ){ clock->increment(); };
+            function = [&](){ clock->increment(); };
          }
          break;
          case( Cycle ):
@@ -264,7 +264,7 @@ private:
 #warning    Cycle counter not supported on this architecture
 #endif
 
-            function = [&]( Clock *clock )
+            function = [&]( )
             {
                /** begin assembly sections **/
 #ifdef   __x86_64
@@ -321,7 +321,7 @@ private:
             };
 #else
 #warning    Cycle counter currently supported for Linux only, defaulting to dummy counter!
-            function = []( Clock *clock ){ clock->increment(); };
+            function = [&](){ clock->increment(); };
 #endif
          }
          break;
@@ -336,7 +336,7 @@ private:
             {
                perror( "Failed to get initial time." );
             }
-            function = [&]( Clock *clock )
+            function = [&]()
             {
                errno = 0;
                if( clock_gettime( CLOCK_REALTIME, &curr_time ) != 0 )
@@ -361,7 +361,7 @@ private:
             {
                (void) mach_timebase_info( &sTimebaseInfo );
             }
-            function = [&]( Clock *clock )
+            function = [&]()
             {
                const auto current( mach_absolute_time() );
                const auto diff( current - previous );
@@ -389,7 +389,7 @@ private:
       d->setup = true;
       while( ! done )
       {
-         function( clock );
+         function();
       }
       pthread_exit( nullptr );
    }
