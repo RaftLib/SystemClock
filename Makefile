@@ -1,4 +1,4 @@
-CXXFLAGS = -std=c++11  -O3 -DRDTSCP=1
+CXXFLAGS = -std=c++11  -O3 -DNOSERIAL=1
 CFLAGS   = -std=c99    -O3 
 
 CXXFILES = main Clock
