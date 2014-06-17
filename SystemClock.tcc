@@ -91,7 +91,9 @@ private:
       }
       while( ! thread_data.setup )
       {
+#if __x86_64      
          __asm__ volatile ("pause" : : :);
+#endif
       }
    }
 
@@ -240,14 +242,14 @@ private:
                movq     %%rdx, %[prev]"
 #elif defined INTEL
              "\
-               mfence                           \n\
+               lfence                           \n\
                rdtsc                            \n\
                shl      $32, %%rdx              \n\
                orq      %%rax, %%rdx            \n\
                movq     %%rdx, %[prev]"
 #elif defined AMD
              "\
-               lfence                           \n\
+               mfence                           \n\
                rdtsc                            \n\
                shl      $32, %%rdx              \n\
                orq      %%rax, %%rdx            \n\
