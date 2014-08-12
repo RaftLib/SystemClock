@@ -27,11 +27,13 @@
 #include <array>
 #include "SystemClock.tcc"
 
-#define RESOLUTION 1
+//#define RESOLUTION 1
+#define TESTPERIOD 1
+
 int 
 main( int argc, char **argv )
 {
-   SystemClock< Cycle > clock( atoi( argv[ 1 ] ) );   
+   SystemClock< System > clock( atoi( argv[ 1 ] ) );   
 #ifdef TESTCLOCK   
    const int microseconds( atoi( argv[ 1 ] ) );
    auto start = clock.getTime();
@@ -48,7 +50,7 @@ main( int argc, char **argv )
    std::cerr << (clock.getTime() - start) << "\n";
    start = clock.getTime();
 #elif defined TESTPERIOD
-   const size_t count( 1e6 );
+   const size_t count( 2e6 );
    std::ofstream ofs( argv[ 1 ] );
    if( ! ofs.is_open() )
    {
@@ -81,17 +83,16 @@ main( int argc, char **argv )
       }
    } mean;
 
-   for( size_t index( 1 ); index < count; index++ )
+   for( size_t index( 0 ); index < count; index++ )
    {
-      const float val( update_array[ index ] - update_array[ index - 1 ] );
-      if( val > 1e-12 ) /** something lower than we'd expect resolution to be **/
-      {
-         mean += val; 
-      }
-      ofs << ( val ) << "\n";  
+      //const float val( update_array[ index ] - update_array[ index - 1 ] );
+      //if( val > 1e-12 ) /** something lower than we'd expect resolution to be **/
+      //{
+      //   mean += val; 
+      //}
+      ofs << (update_array[ index ]) << "\n";
+      //ofs << ( val ) << "\n";  
    }
-   std::cout << "Mean resolution: ";
-   mean.print( std::cout ) << "\n";
    ofs.close();
 #elif defined RESOLUTION
    std::cout << "Resolution: " << clock.getResolution() << "\n";

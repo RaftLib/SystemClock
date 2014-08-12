@@ -2,8 +2,8 @@ CXXFLAGS = -std=c++11  -O3 -DNOSERIAL=1
 CFLAGS   = -std=c99    -O3 
 
 CXXFILES = main Clock
-CC   = gcc
-CXX  = g++
+CC   ?= gcc
+CXX  ?= g++
 
 ifneq ($(shell uname -s), Darwin)
 RT = -lrt
