@@ -7,5 +7,10 @@ TESTS = testclock
 check_PROGRAMS = 
 check_PROGRAMS += testclock
 testclock_SOURCES = testclock.cpp
-testclock_LDADD = -L./$(top_srcdir)/src -lsystemclock -lpthread -lrt
-testclock_LDFLAGS  = -static
+if BUILD_OS_IS_DARWIN
+LINUX_LDADD = 
+else
+LINUX_LDADD = -lpthread -lrt
+testclock_LDFLAGS  = #-static
+endif
+testclock_LDADD = -L./$(top_srcdir)/src -lsystemclock $(LINUX_LDADD)

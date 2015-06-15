@@ -635,6 +635,8 @@ CCDEPMODE
 ac_ct_CC
 CFLAGS
 CC
+BUILD_OS_IS_DARWIN_FALSE
+BUILD_OS_IS_DARWIN_TRUE
 RANLIB
 am__fastdepCXX_FALSE
 am__fastdepCXX_TRUE
@@ -3587,6 +3589,14 @@ fi
 
 # Checks for libraries.
 
+ if test x"$build_os" = darwin; then
+  BUILD_OS_IS_DARWIN_TRUE=
+  BUILD_OS_IS_DARWIN_FALSE='#'
+else
+  BUILD_OS_IS_DARWIN_TRUE='#'
+  BUILD_OS_IS_DARWIN_FALSE=
+fi
+
 # Checks for header files.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -4923,6 +4933,10 @@ Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCXX_TRUE}" && test -z "${am__fastdepCXX_FALSE}"; then
   as_fn_error $? "conditional \"am__fastdepCXX\" was never defined.
+Usually this means the macro was only invoked conditionally." "$LINENO" 5
+fi
+if test -z "${BUILD_OS_IS_DARWIN_TRUE}" && test -z "${BUILD_OS_IS_DARWIN_FALSE}"; then
+  as_fn_error $? "conditional \"BUILD_OS_IS_DARWIN\" was never defined.
 Usually this means the macro was only invoked conditionally." "$LINENO" 5
 fi
 if test -z "${am__fastdepCC_TRUE}" && test -z "${am__fastdepCC_FALSE}"; then

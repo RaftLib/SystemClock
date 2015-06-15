@@ -11,6 +11,7 @@ AC_PROG_CXX
 AC_PROG_RANLIB
 # Checks for libraries.
 
+AM_CONDITIONAL(BUILD_OS_IS_DARWIN, [test x"$build_os" = darwin])
 # Checks for header files.
 AC_CHECK_HEADERS([unistd.h])
 
