@@ -29,14 +29,8 @@ public:
    virtual ~Clock();
 
    virtual sclock_t getTime() = 0;
-#if 0 
-/**
- * TODO: implement these
- */
    virtual sclock_t stop()    = 0;
-
    virtual sclock_t start()   = 0;
-#endif
    sclock_t getResolution();
 
 private:

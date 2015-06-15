@@ -74,10 +74,20 @@ public:
       return( thread_data.clock->read() );
    }
 
+   virtual sclock_t stop()
+   {
+      thread_data.stopped = true;
+      return( thread_data.clock->read() );
+   }
 
+   virtual sclock_t start()
+   {
+      const auto ret_val( thread_data.clock->read() );
+      thread_data.stopped = false;
+      return( ret_val );
+   }
 
 private:
-
    void init()
    {
       errno = 0;
@@ -128,10 +138,7 @@ private:
    };
 
    struct ThreadData{
-      ThreadData() : clock( nullptr ),
-                     done(  false ),
-                     setup( false ),
-                     core( 0 )
+      ThreadData()
       {
          clock = new Clock();
       }
@@ -143,10 +150,11 @@ private:
          done = true;
       }
 
-      Clock         *clock;
-      volatile bool done;
-      volatile bool setup;
-      int           core;
+      Clock         *clock  = nullptr;
+      volatile bool done    = false;
+      volatile bool setup   = false;
+      volatile bool stopped = false;
+      int           core    = 0;
    } thread_data ;
 
    /**
@@ -154,8 +162,8 @@ private:
     */
    static void* updateClock( void *data )
    {
-      ThreadData *d( reinterpret_cast< ThreadData* >( data ) );
-      Clock         *clock( d->clock );
+      ThreadData * const d( reinterpret_cast< ThreadData* >( data ) );
+      Clock         * const clock( d->clock );
       volatile bool &done(   d->done );
       std::function< void () > function;
       switch( T )
@@ -425,7 +433,10 @@ private:
       d->setup = true;
       while( ! done )
       {
-         function();
+         if( ! d->stopped )
+         {
+            function();
+         }
       }
       pthread_exit( nullptr );
    }

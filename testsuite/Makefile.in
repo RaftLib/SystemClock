@@ -75,8 +75,8 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-TESTS = testclock$(EXEEXT)
-check_PROGRAMS = testclock$(EXEEXT)
+TESTS = testclock$(EXEEXT) teststop$(EXEEXT)
+check_PROGRAMS = testclock$(EXEEXT) teststop$(EXEEXT)
 subdir = testsuite
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/../depcomp $(top_srcdir)/../test-driver
@@ -93,6 +93,9 @@ am__DEPENDENCIES_1 =
 testclock_DEPENDENCIES = $(am__DEPENDENCIES_1)
 testclock_LINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) \
 	$(testclock_LDFLAGS) $(LDFLAGS) -o $@
+am_teststop_OBJECTS = teststop.$(OBJEXT)
+teststop_OBJECTS = $(am_teststop_OBJECTS)
+teststop_DEPENDENCIES = $(am__DEPENDENCIES_1)
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -122,8 +125,8 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(testclock_SOURCES)
-DIST_SOURCES = $(testclock_SOURCES)
+SOURCES = $(testclock_SOURCES) $(teststop_SOURCES)
+DIST_SOURCES = $(testclock_SOURCES) $(teststop_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -449,11 +452,13 @@ AUTOMAKE_OPTIONS = foreign
 AM_CXXFLAGS = -std=c++11  -O3 -DNOSERIAL=1 -DRDTSCP=1
 AM_CFLAGS = -std=c99    -O3
 AM_CPPFLAGS = -I. -I$(top_srcdir)/include 
-testclock_SOURCES = testclock.cpp
 @BUILD_OS_IS_DARWIN_FALSE@LINUX_LDADD = -lpthread -lrt
 @BUILD_OS_IS_DARWIN_TRUE@LINUX_LDADD = 
-@BUILD_OS_IS_DARWIN_FALSE@testclock_LDFLAGS = #-static
+@BUILD_OS_IS_DARWIN_FALSE@testclock_LDFLAGS = -static
+testclock_SOURCES = testclock.cpp
 testclock_LDADD = -L./$(top_srcdir)/src -lsystemclock $(LINUX_LDADD)
+teststop_SOURCES = teststop.cpp
+teststop_LDADD = -L./$(top_srcdir)/src -lsystemclock $(LINUX_LDADD)
 all: all-am
 
 .SUFFIXES:
@@ -496,6 +501,10 @@ testclock$(EXEEXT): $(testclock_OBJECTS) $(testclock_DEPENDENCIES) $(EXTRA_testc
 	@rm -f testclock$(EXEEXT)
 	$(AM_V_CXXLD)$(testclock_LINK) $(testclock_OBJECTS) $(testclock_LDADD) $(LIBS)
 
+teststop$(EXEEXT): $(teststop_OBJECTS) $(teststop_DEPENDENCIES) $(EXTRA_teststop_DEPENDENCIES) 
+	@rm -f teststop$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(teststop_OBJECTS) $(teststop_LDADD) $(LIBS)
+
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 
@@ -503,6 +512,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testclock.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/teststop.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -714,6 +724,13 @@ recheck: all $(check_PROGRAMS)
 testclock.log: testclock$(EXEEXT)
 	@p='testclock$(EXEEXT)'; \
 	b='testclock'; \
+	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
+	--log-file $$b.log --trs-file $$b.trs \
+	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
+	"$$tst" $(AM_TESTS_FD_REDIRECT)
+teststop.log: teststop$(EXEEXT)
+	@p='teststop$(EXEEXT)'; \
+	b='teststop'; \
 	$(am__check_pre) $(LOG_DRIVER) --test-name "$$f" \
 	--log-file $$b.log --trs-file $$b.trs \
 	$(am__common_driver_flags) $(AM_LOG_DRIVER_FLAGS) $(LOG_DRIVER_FLAGS) -- $(LOG_COMPILE) \
