@@ -3,13 +3,15 @@ AM_CXXFLAGS = -std=c++11  -O3 -DNOSERIAL=1 -DRDTSCP=1
 AM_CFLAGS   = -std=c99    -O3
 AM_CPPFLAGS =  -I. -I$(top_srcdir)/include 
 
+LINUXADD =
+AM_LDFLAGS = 
 
-if BUILD_OS_IS_DARWIN
-LINUX_LDADD = 
-else
-LINUX_LDADD = -lpthread -lrt
-testclock_LDFLAGS  = -static
+if LINUX
+LINUXADD    += -lrt -lpthread
+AM_LDFLAGS  += -static -Wl,--no-whole-archive
 endif
+
+LDADD = $(LINUXADD)
 
 TESTS = testclock teststop
 

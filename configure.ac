@@ -8,10 +8,30 @@ AC_CONFIG_SRCDIR([src/Clock.cpp])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 # Checks for programs.
 AC_PROG_CXX
-AC_PROG_RANLIB
+LT_INIT
 # Checks for libraries.
 
-AM_CONDITIONAL(BUILD_OS_IS_DARWIN, [test x"$build_os" = darwin])
+case $host_os in 
+   darwin*)
+      os_bsd=no
+      os_darwin=yes
+      os_linux=no
+   ;;
+   linux*)
+      os_bsd=no
+      os_darwin=no
+      os_linux=yes
+   ;;
+   bsd*)
+      os_bsd=yes
+      os_darwin=no
+      os_linux=no
+   ;;
+esac
+
+AM_CONDITIONAL([DARWIN], [test x$os_darwin = xyes]) 
+AM_CONDITIONAL([LINUX],  [test x$os_linux = xyes]) 
+
 # Checks for header files.
 AC_CHECK_HEADERS([unistd.h])
 

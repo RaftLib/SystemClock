@@ -2,4 +2,5 @@ AUTOMAKE_OPTIONS=foreign
 AM_CXXFLAGS = -std=c++11  -O3 -DNOSERIAL=1
 AM_CFLAGS   = -std=c99    -O3
 AM_CPPFLAGS =  -I./include
+ACLOCAL_AMFLAGS = -I m4 
 SUBDIRS = src testsuite
