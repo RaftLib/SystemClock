@@ -11,16 +11,13 @@ LINUXADD    += -lrt -lpthread
 AM_LDFLAGS  += -static -Wl,--no-whole-archive
 endif
 
-LDADD = $(LINUXADD)
+LDADD = -L./$(top_srcdir)/src -lsystemclock $(LINUXADD)
 
 TESTS = testclock teststop
 
 check_PROGRAMS = 
 check_PROGRAMS += testclock
 testclock_SOURCES = testclock.cpp
-testclock_LDADD = -L./$(top_srcdir)/src -lsystemclock $(LINUX_LDADD)
 
 check_PROGRAMS += teststop
 teststop_SOURCES = teststop.cpp
-teststop_LDADD = -L./$(top_srcdir)/src -lsystemclock $(LINUX_LDADD)
-
