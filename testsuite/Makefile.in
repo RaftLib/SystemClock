@@ -80,7 +80,7 @@ host_triplet = @host@
 @LINUX_TRUE@am__append_1 = -lrt -lpthread
 @LINUX_TRUE@am__append_2 = -static -Wl,--no-whole-archive
 TESTS = testclock$(EXEEXT) teststop$(EXEEXT)
-check_PROGRAMS = testclock$(EXEEXT) teststop$(EXEEXT)
+check_PROGRAMS = testclock$(EXEEXT) teststop$(EXEEXT) simple$(EXEEXT)
 subdir = testsuite
 DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/Makefile.am \
 	$(top_srcdir)/depcomp $(top_srcdir)/test-driver
@@ -94,16 +94,20 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_testclock_OBJECTS = testclock.$(OBJEXT)
-testclock_OBJECTS = $(am_testclock_OBJECTS)
-testclock_LDADD = $(LDADD)
+am_simple_OBJECTS = simple.$(OBJEXT)
+simple_OBJECTS = $(am_simple_OBJECTS)
+simple_LDADD = $(LDADD)
 am__DEPENDENCIES_1 =
 am__DEPENDENCIES_2 = $(am__DEPENDENCIES_1)
-testclock_DEPENDENCIES = $(am__DEPENDENCIES_2)
+simple_DEPENDENCIES = $(am__DEPENDENCIES_2)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
+am_testclock_OBJECTS = testclock.$(OBJEXT)
+testclock_OBJECTS = $(am_testclock_OBJECTS)
+testclock_LDADD = $(LDADD)
+testclock_DEPENDENCIES = $(am__DEPENDENCIES_2)
 am_teststop_OBJECTS = teststop.$(OBJEXT)
 teststop_OBJECTS = $(am_teststop_OBJECTS)
 teststop_LDADD = $(LDADD)
@@ -142,8 +146,9 @@ AM_V_CXXLD = $(am__v_CXXLD_@AM_V@)
 am__v_CXXLD_ = $(am__v_CXXLD_@AM_DEFAULT_V@)
 am__v_CXXLD_0 = @echo "  CXXLD   " $@;
 am__v_CXXLD_1 = 
-SOURCES = $(testclock_SOURCES) $(teststop_SOURCES)
-DIST_SOURCES = $(testclock_SOURCES) $(teststop_SOURCES)
+SOURCES = $(simple_SOURCES) $(testclock_SOURCES) $(teststop_SOURCES)
+DIST_SOURCES = $(simple_SOURCES) $(testclock_SOURCES) \
+	$(teststop_SOURCES)
 am__can_run_installinfo = \
   case $$AM_UPDATE_INFO_DIR in \
     n|no|NO) false;; \
@@ -493,7 +498,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 AUTOMAKE_OPTIONS = foreign
-AM_CXXFLAGS = -std=c++11  -O3 -DNOSERIAL=1 -DRDTSCP=1
+AM_CXXFLAGS = -std=c++11  -O3  -INTEL=1
 AM_CFLAGS = -std=c99    -O3
 AM_CPPFLAGS = -I. -I$(top_srcdir)/include 
 LINUXADD = $(am__append_1)
@@ -501,6 +506,7 @@ AM_LDFLAGS = $(am__append_2)
 LDADD = -L./$(top_srcdir)/src -lsystemclock $(LINUXADD)
 testclock_SOURCES = testclock.cpp
 teststop_SOURCES = teststop.cpp
+simple_SOURCES = simple.cpp
 all: all-am
 
 .SUFFIXES:
@@ -545,6 +551,10 @@ clean-checkPROGRAMS:
 	echo " rm -f" $$list; \
 	rm -f $$list
 
+simple$(EXEEXT): $(simple_OBJECTS) $(simple_DEPENDENCIES) $(EXTRA_simple_DEPENDENCIES) 
+	@rm -f simple$(EXEEXT)
+	$(AM_V_CXXLD)$(CXXLINK) $(simple_OBJECTS) $(simple_LDADD) $(LIBS)
+
 testclock$(EXEEXT): $(testclock_OBJECTS) $(testclock_DEPENDENCIES) $(EXTRA_testclock_DEPENDENCIES) 
 	@rm -f testclock$(EXEEXT)
 	$(AM_V_CXXLD)$(CXXLINK) $(testclock_OBJECTS) $(testclock_LDADD) $(LIBS)
@@ -559,6 +569,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/testclock.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/teststop.Po@am__quote@
 

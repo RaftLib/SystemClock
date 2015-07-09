@@ -26,8 +26,10 @@ main( int argc, char **argv )
       usleep( (useconds_t) microseconds );
       const auto diff( clock.start() - start );
       diff_accum += diff;
+      std::fprintf( stderr, "%f\n", diff );
    }
    const double average( diff_accum / num_iterations );
+   std::fprintf( stderr, "%f\n", average );
    /** 
     * 10x is pretty much completely arbitrary and a bad swap
     * will result in this test failing

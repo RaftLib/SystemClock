@@ -44,25 +44,22 @@ Clock::getResolution()
    {
       return( *resolution );
    }
-   const size_t count( 1e6 );
+   const std::size_t count( 1e6 );
    std::array< sclock_t , count > update_array; 
-   for( size_t index( 0 ); index < count; index++ )
+   for( auto index( 0 ); index < count; index++ )
    {
       update_array[ index ] = getTime();
    }
    struct Mean{
-      Mean() : total( 0.0 ),
-               n( 0 )
-      {}
-
-      sclock_t   total;
-      uint64_t n;
+      sclock_t       total = 0;
+      std::uint64_t  n     = 0;
       
       sclock_t get()
       {
          return( total / n );
       }
-      void operator += (const sclock_t val )
+
+      void operator += ( const sclock_t val )
       {
          total += val;
          n++;
@@ -75,7 +72,7 @@ Clock::getResolution()
       }
    } mean;
 
-   for( size_t index( 1 ); index < count; index++ )
+   for( auto index( 1 ); index < count; index++ )
    {
       const sclock_t val( update_array[ index ] - update_array[ index - 1 ] );
       if( val > 1e-12 ) /** something lower than we'd expect resolution to be **/

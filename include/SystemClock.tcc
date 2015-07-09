@@ -56,7 +56,7 @@ enum ClockType  { Dummy, Cycle, System };
 
 template < ClockType T > class SystemClock : public Clock {
 public:
-   SystemClock( int core  = 0) : updater( 0 )
+   SystemClock( std::int32_t core  = 0 ) : updater( 0 )
    {
       thread_data.core = core;
       init();
@@ -154,7 +154,7 @@ private:
       volatile bool done    = false;
       volatile bool setup   = false;
       volatile bool stopped = false;
-      int           core    = 0;
+      std::int32_t  core    = 0;
    } thread_data ;
 
    /**
@@ -166,33 +166,35 @@ private:
       Clock         * const clock( d->clock );
       volatile bool &done(   d->done );
       std::function< void () > function;
+      std::function< void () > prime;
       switch( T )
       {
          case( Dummy ):
          {
+            prime    = [&](){ /** do nothing **/ };
             function = [&](){ clock->increment(); };
          }
          break;
          case( Cycle ):
          {
 #ifdef   __linux
-            FILE  *fp = NULL;
+            FILE  *fp( nullptr );
             errno = 0;
             fp = fopen("/proc/cpuinfo", "r");
             if(fp == NULL)
             {
-               perror( "Failed to read proc/cpuinfo!!\n" );
-               exit( EXIT_FAILURE );
+               std::perror( "Failed to read proc/cpuinfo!!\n" );
+               std::exit( EXIT_FAILURE );
             }
-            const size_t buff_size = 20;
-            char *key = (char*) alloca(sizeof(char) * buff_size);
-            char *value = (char*) alloca(sizeof(char) * buff_size);
+            const std::size_t buff_size = 20;
+            char * key   = (char*) alloca(sizeof(char) * buff_size);
+            char * value = (char*) alloca(sizeof(char) * buff_size);
             assert( key != NULL );
             assert( value != NULL );
             std::memset( key, '\0', buff_size );
             std::memset( value, '\0', buff_size );
-            uint64_t frequency( 0 );
-            int count = EOF;
+            std::uint64_t frequency( 0 );
+            auto count = EOF;
             while( ( count = fscanf(fp,"%[^:]:%[^\n]\n", key, value) ) != EOF )
             {
                if( count == 2 ){
@@ -211,9 +213,9 @@ private:
              * pin the current thread 
              */
             cpu_set_t   *cpuset( nullptr );
-            size_t cpu_allocate_size( -1 );
+            std::size_t cpu_allocate_size( -1 );
 #if   (__GLIBC_MINOR__ > 9 ) && (__GLIBC__ == 2 )
-            const int8_t   processors_to_allocate( 1 );
+            const std::int8_t   processors_to_allocate( 1 );
             cpuset = CPU_ALLOC( processors_to_allocate );
             assert( cpuset != nullptr );
             cpu_allocate_size = CPU_ALLOC_SIZE( processors_to_allocate );
@@ -237,9 +239,12 @@ private:
             }
             /** wait till we know we're on the right processor **/
             pthread_yield();
+            pthread_yield();
             /** get to the timing, previous is captured by the lambda function **/
-            uint64_t previous( 0 );
+            std::uint64_t previous( 0 );
             /** begin assembly section to init previous **/
+            prime = [&]()
+            {
 #ifdef   __x86_64
             __asm__ volatile(
 #if RDTSCP  
@@ -285,12 +290,13 @@ private:
 #else
 #warning    Cycle counter not supported on this architecture
 #endif
-
+            };
+            
             function = [&]( )
             {
                /** begin assembly sections **/
 #ifdef   __x86_64
-               uint64_t difference;
+               std::uint64_t difference( 0 );
                __asm__ volatile(
 #if RDTSCP               
                "\
@@ -376,10 +382,13 @@ private:
             struct timespec prev_time;
             std::memset( &curr_time, 0, sizeof( struct timespec ) ); 
             std::memset( &prev_time, 0, sizeof( struct timespec ) ); 
-            if( clock_gettime( CLOCK_REALTIME, &prev_time ) != 0 )
+            prime = [&]()
             {
-               perror( "Failed to get initial time." );
-            }
+               if( clock_gettime( CLOCK_REALTIME, &prev_time ) != 0 )
+               {
+                  perror( "Failed to get initial time." );
+               }
+            };
             function = [&]()
             {
                errno = 0;
@@ -398,8 +407,13 @@ private:
                clock->increment( seconds );
             };
 #elif defined __APPLE__
-            uint64_t  previous( mach_absolute_time() );
+            std::uint64_t  previous( 0 );
+
             /** init **/
+            prime = [&]()
+            {
+               previous = mach_absolute_time();
+            }
             static mach_timebase_info_data_t sTimebaseInfo;
             if( sTimebaseInfo.denom == 0 )
             {
@@ -415,8 +429,8 @@ private:
                 * figure out what units the return val is in.
                 */
                 
-                const uint64_t elapsedNano( diff * sTimebaseInfo.numer / 
-                                                   sTimebaseInfo.denom );
+                const std::uint64_t elapsedNano( diff * sTimebaseInfo.numer / 
+                                                        sTimebaseInfo.denom );
                 
                 const sclock_t seconds( (sclock_t) elapsedNano * 1.0e-9 );
                 clock->increment( seconds );
@@ -430,12 +444,18 @@ private:
          }
          break;
       }
+      prime();
       d->setup = true;
       while( ! done )
       {
          if( ! d->stopped )
          {
             function();
+         }
+         else
+         {
+            /** technically re-prime **/
+            //prime();
          }
       }
       pthread_exit( nullptr );

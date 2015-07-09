@@ -1,5 +1,5 @@
 AUTOMAKE_OPTIONS=foreign
-AM_CXXFLAGS = -std=c++11  -O3 -DNOSERIAL=1 -DRDTSCP=1
+AM_CXXFLAGS = -std=c++11  -O3  -INTEL=1
 AM_CFLAGS   = -std=c99    -O3
 AM_CPPFLAGS =  -I. -I$(top_srcdir)/include 
 
@@ -21,3 +21,6 @@ testclock_SOURCES = testclock.cpp
 
 check_PROGRAMS += teststop
 teststop_SOURCES = teststop.cpp
+
+check_PROGRAMS += simple
+simple_SOURCES = simple.cpp
