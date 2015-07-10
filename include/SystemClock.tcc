@@ -109,17 +109,15 @@ private:
 
    class Clock {
    public:
-      Clock() : a( (sclock_t) 0 ),
-                b( (sclock_t) 0 )
-      {}
-      
-      inline void increment( const sclock_t inc = (sclock_t) 1 )
+      Clock() = default;
+
+      inline void increment( const sclock_t inc = static_cast< sclock_t >( 1 ) ) noexcept
       {
          a += inc;
          b += inc;
       }
 
-      inline sclock_t read()
+      inline sclock_t read() noexcept
       {
          struct{
             sclock_t a;
@@ -133,8 +131,8 @@ private:
       }
 
    private:
-      volatile sclock_t a;
-      volatile sclock_t b;
+      volatile sclock_t a = static_cast< sclock_t >( 0 );
+      volatile sclock_t b = static_cast< sclock_t >( 0 );
    };
 
    struct ThreadData{
@@ -455,7 +453,7 @@ private:
          else
          {
             /** technically re-prime **/
-            //prime();
+            prime();
          }
       }
       pthread_exit( nullptr );
