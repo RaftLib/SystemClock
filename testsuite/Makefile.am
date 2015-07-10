@@ -1,5 +1,5 @@
 AUTOMAKE_OPTIONS=foreign
-AM_CXXFLAGS = -std=c++11  -O3  -INTEL=1
+AM_CXXFLAGS = -std=c++11  -O3  -DRDTSCP=1
 AM_CFLAGS   = -std=c99    -O3
 AM_CPPFLAGS =  -I. -I$(top_srcdir)/include 
 
