@@ -13,8 +13,10 @@ int
 main( int argc, char **argv )
 {
 
-   SystemClock< Cycle > clock( 0 /** core zero **/ );   
+   SystemClock< System > clock( 0 /** core zero **/ );   
 
+   std::cerr << clock.getTime() << "\n";
+   std::this_thread::sleep_for( std::chrono::seconds(2) );
    std::cerr << clock.getTime() << "\n";
    std::this_thread::sleep_for( std::chrono::seconds(2) );
    std::cerr << clock.getTime() << "\n";

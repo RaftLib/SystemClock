@@ -413,7 +413,7 @@ private:
             prime = [&]()
             {
                previous = mach_absolute_time();
-            }
+            };
             static mach_timebase_info_data_t sTimebaseInfo;
             if( sTimebaseInfo.denom == 0 )
             {
