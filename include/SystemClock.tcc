@@ -25,8 +25,8 @@
 #include <cassert>
 #include <cstdint>
 #include <cstring>
-#include <unistd.h>
-#include <pthread.h>
+#include <thread>
+#include <chrono>
 #include "Clock.hpp"
 
 #ifdef __APPLE__
@@ -43,6 +43,10 @@
 #endif
 
 
+#if defined __linux || defined __APPLE__
+#include <unistd.h>
+#endif
+
 /**
  * TODO:
  * 1) Add new constructor for allocating in SHM
@@ -56,16 +60,21 @@ enum ClockType  { Dummy, Cycle, System };
 
 template < ClockType T > class SystemClock : public Clock {
 public:
-   SystemClock( std::int32_t core  = 0 ) : updater( 0 )
+   SystemClock( std::int32_t core  = 0 ) : thread_data( core ),
+                                           updater( updateClock, &thread_data )
    {
-      thread_data.core = core;
-      init();
+      while( ! thread_data.setup )
+      {
+#if __x86_64      
+         __asm__ volatile ("pause" : : :);
+#endif
+      }
    }
 
    virtual ~SystemClock()
    {
       thread_data.done = true;
-      pthread_join( updater, nullptr );
+      updater.join();
    }
 
    
@@ -88,54 +97,39 @@ public:
    }
 
 private:
-   void init()
-   {
-      errno = 0;
-      if( pthread_create( &updater, 
-                          nullptr, 
-                          updateClock, 
-                          (void*) &thread_data ) != 0 )
-      {
-         perror( "Failed to create timer thread, exiting." );
-         exit( EXIT_FAILURE );
-      }
-      while( ! thread_data.setup )
-      {
-#if __x86_64      
-         __asm__ volatile ("pause" : : :);
-#endif
-      }
-   }
 
-   class Clock {
+   class Clock 
+   {
    public:
       Clock() = default;
 
-      inline void increment( const sclock_t inc = static_cast< sclock_t >( 1 ) ) noexcept
+      inline void increment( const sclock_t inc = 
+        static_cast< sclock_t >( 1 ) ) noexcept
       {
          a += inc;
-         b += inc;
+      }
+
+      inline void set( const sclock_t t ) noexcept
+      {
+         a = t;
       }
 
       inline sclock_t read() noexcept
       {
-         struct{
-            sclock_t a;
-            sclock_t b;
-         } copy;
-         do{
-            copy.a = a;
-            copy.b = b;
-         }while( copy.a != copy.b );
-         return( copy.b );
+        return( a );
       }
 
    private:
       volatile sclock_t a = static_cast< sclock_t >( 0 );
-      volatile sclock_t b = static_cast< sclock_t >( 0 );
    };
 
    struct ThreadData{
+
+      ThreadData( const std::int32_t c ) : ThreadData()
+      {
+        core = c;
+      }
+      
       ThreadData()
       {
          clock = new Clock();
@@ -158,9 +152,8 @@ private:
    /**
     * updateClock - function called by thread to update global clock,
     */
-   static void* updateClock( void *data )
+   static void updateClock( ThreadData * const d )
    {
-      ThreadData * const d( reinterpret_cast< ThreadData* >( data ) );
       Clock         * const clock( d->clock );
       volatile bool &done(   d->done );
       std::function< void () > function;
@@ -236,8 +229,8 @@ private:
                exit( EXIT_FAILURE );
             }
             /** wait till we know we're on the right processor **/
-            pthread_yield();
-            pthread_yield();
+            std::this_thread::yield();
+            std::this_thread::yield();
             /** get to the timing, previous is captured by the lambda function **/
             std::uint64_t previous( 0 );
             /** begin assembly section to init previous **/
@@ -404,7 +397,7 @@ private:
                         ( ( sclock_t ) diff.tv_nsec * 1.0e-9 ) );
                clock->increment( seconds );
             };
-#elif defined __APPLE__
+#elif __APPLE__
             std::uint64_t  previous( 0 );
 
             /** init **/
@@ -433,6 +426,20 @@ private:
                 const sclock_t seconds( (sclock_t) elapsedNano * 1.0e-9 );
                 clock->increment( seconds );
             };
+#else //use new C++ chrono
+            const auto previous( std::chrono::high_resolution_clock::now() );
+            prime = [&]()
+            {
+                return;
+            };
+            function = [&]()
+            {
+                const auto current( std::chrono::high_resolution_clock::now() );
+                std::chrono::duration< double >  diff( 
+                   current - previous
+                );
+                clock->set( diff.count() );
+            };
 #endif
          }
          break;
@@ -442,8 +449,8 @@ private:
          }
          break;
       }
-      prime();
       d->setup = true;
+      prime();
       while( ! done )
       {
          if( ! d->stopped )
@@ -456,9 +463,9 @@ private:
             prime();
          }
       }
-      pthread_exit( nullptr );
+      return;
    }
 
-   pthread_t         updater;
+   std::thread  updater;
 };
 #endif /* END _SYSTEMCLOCK_HPP_ */
