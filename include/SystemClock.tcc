@@ -169,6 +169,7 @@ private:
          case( Cycle ):
          {
 #ifdef   __linux
+#warning "Cycle counter won't work with frequency scaling turned on!"
             FILE  *fp( nullptr );
             errno = 0;
             fp = fopen("/proc/cpuinfo", "r");
@@ -264,6 +265,8 @@ private:
                shl      $32, %%rdx              \n\
                orq      %%rax, %%rdx            \n\
                movq     %%rdx, %[prev]"
+#else
+             "nop"
 #endif
                :
                /*outputs here*/
@@ -332,6 +335,8 @@ private:
                subq     %%rcx, %%rax            \n\
                movq     %%rax, %[diff]          \n\
                movq     %%rdx, %[prev]"
+#else
+                "nop"
 #endif
                   :
                   /*outputs here*/

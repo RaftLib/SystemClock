@@ -35,5 +35,6 @@ public:
 
 private:
    sclock_t   *resolution;
+
 };
 #endif /* END _CLOCK_HPP_ */
