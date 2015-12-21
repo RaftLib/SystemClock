@@ -58,7 +58,8 @@ endif( NOT CMAKE_HOST_UNIX )
 
 set( TESTAPPS 
         basicClockUse 
-        testclock )
+        testclock
+        teststop )
 
 
 foreach( APP ${TESTAPPS} )

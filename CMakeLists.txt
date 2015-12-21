@@ -39,7 +39,8 @@ add_subdirectory( testsuite )
 enable_testing()
 set( TESTAPPS 
         basicClockUse 
-        testclock )
+        testclock
+        teststop )
 
 foreach( APP ${TESTAPPS} )
     add_test( NAME "${APP}_clock_test"
